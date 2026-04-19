@@ -8,4 +8,10 @@
             30
         </session-timeout>
     </session-config>
+    <display-name>CCHC Clinic System</display-name>
+    
+    <!-- 歡迎頁面（直接跳到登入頁） -->
+    <welcome-file-list>
+        <welcome-file>/views/common/login.jsp</welcome-file>
+    </welcome-file-list>
 </web-app>

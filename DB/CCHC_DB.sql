@@ -115,3 +115,12 @@ CREATE TABLE audit_log
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ==================== 完成 ====================
+-- ==================== Test Case ====================
+INSERT INTO users (username, password, full_name, email, phone, role, clinic_id, active) VALUES
+('admin', '123456', '系統管理員', 'admin@cchc.hk', '12345678', 'ADMIN', NULL, 1),
+
+('staff1', '123456', '陳護理', 'staff1@cchc.hk', '98765432', 'STAFF', 1, 1),   -- Chai Wan
+('staff2', '123456', '李護士', 'staff2@cchc.hk', '91234567', 'STAFF', 2, 1),   -- Tseung Kwan O
+
+('patient1', '123456', '張小明', 'patient1@gmail.com', '55556666', 'PATIENT', NULL, 1),
+('patient2', '123456', '李小華', 'patient2@gmail.com', '66667777', 'PATIENT', NULL, 1);

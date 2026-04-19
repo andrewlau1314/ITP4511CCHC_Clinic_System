@@ -1,2 +1,6 @@
 com\cchc\cchc_clinic_system\JakartaRestConfiguration.class
+com\cchc\dao\UserDAO.class
+com\cchc\model\User.class
 com\cchc\cchc_clinic_system\resources\JakartaEE8Resource.class
+com\cchc\util\DBConnection.class
+com\cchc\controller\LoginServlet.class

@@ -4,6 +4,7 @@
  */
 package com.cchc.util;
 import java.io.IOException;
+import java.sql.*;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -19,7 +20,7 @@ public class DBConnection {
         testConnection();
     }
   
-    private static final String DB_URL = "jdbc:mysql://localhost:3306/cchc_db";
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/cchc_db"+ "?useTimeZone=true&serverTimezone=UTC&autoReconnect=true&useSSL=false";
     private static final String DB_USER = "root";      
     private static final String DB_PASSWORD = "root"; 
     
