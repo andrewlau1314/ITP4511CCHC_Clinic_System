@@ -23,8 +23,11 @@ public class LogoutServlet extends HttpServlet {
         
         HttpSession session = request.getSession(false);
         if (session != null) {
-            session.invalidate();   // 清除所有 Session
+            session.invalidate();   // 清除 Session
         }
-        response.sendRedirect("views/common/login.jsp");
+        
+
+        String contextPath = request.getContextPath();
+        response.sendRedirect(contextPath);
     }
 }

@@ -5,6 +5,8 @@
 package com.cchc.dao;
 import com.cchc.model.User;
 import com.cchc.util.DBConnection;
+
+import java.io.IOException;
 import java.sql.*;
 /**
  *
@@ -39,6 +41,10 @@ public class UserDAO {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
         }
         return null;
     }
