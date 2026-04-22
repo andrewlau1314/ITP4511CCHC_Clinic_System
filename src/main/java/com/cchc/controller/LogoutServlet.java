@@ -15,6 +15,7 @@ import java.io.IOException;
  *
  * @author user
  */
+
 @WebServlet("/logout.do")
 public class LogoutServlet extends HttpServlet {
     
@@ -23,10 +24,9 @@ public class LogoutServlet extends HttpServlet {
         
         HttpSession session = request.getSession(false);
         if (session != null) {
-            session.invalidate();   // 清除 Session
+            session.invalidate();
         }
         
-
         String contextPath = request.getContextPath();
         response.sendRedirect(contextPath);
     }

@@ -5,9 +5,9 @@
 --%>
 
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ page import="com.cchc.model.User" %>
+<%@ page import="com.cchc.bean.UserBean" %>
 <%
-    User currentUser = (User) session.getAttribute("currentUser");
+    UserBean currentUser = (UserBean) session.getAttribute("currentUser");
 %>
 <!DOCTYPE html>
 <html>
