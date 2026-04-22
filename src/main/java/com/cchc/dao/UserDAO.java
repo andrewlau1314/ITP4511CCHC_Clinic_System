@@ -14,7 +14,7 @@ public class UserDAO {
     
     // 登入驗證（返回 User 物件，如果失敗返回 null）
     public User login(String username, String password) {
-        String sql = "SELECT * FROM users WHERE username = ? AND password = ? AND active = 1";
+        String sql = "SELECT * FROM users WHERE username = ? AND password = BINARY ? AND active = 1";
         
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -32,7 +32,7 @@ public class UserDAO {
                     user.setEmail(rs.getString("email"));
                     user.setPhone(rs.getString("phone"));
                     user.setRole(rs.getString("role"));
-                    user.setClinicId(rs.getObject("clinic_id", Integer.class));
+//                    user.setClinicId(rs.getObject("clinic_id", Integer.class));
                     user.setActive(rs.getBoolean("active"));
                     return user;
                 }

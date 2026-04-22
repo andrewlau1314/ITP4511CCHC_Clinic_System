@@ -13,9 +13,7 @@
         <title>JSP Page</title>
     </head>
     <body>
-        <h1>Hello World!testaaaaaaaaaaaaaaa</h1>
+        <jsp:forward page="/views/common/login.jsp"/>
 
-    
-   
     </body>
 </html>
