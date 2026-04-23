@@ -46,16 +46,12 @@ public class UserDB {
                     ub.setEmail(rs.getString("email"));
                     ub.setPhone(rs.getString("phone"));
                     ub.setRole(rs.getString("role"));
-//                    ub.setClinicId(rs.getObject("clinic_id", Integer.class));
+                    ub.setClinicId(rs.getInt("clinic_id"));
                     ub.setActive(rs.getBoolean("active"));
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
         }
         return ub;
     }

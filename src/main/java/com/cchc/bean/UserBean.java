@@ -10,6 +10,7 @@ package com.cchc.bean;
  */
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 public class UserBean implements Serializable {
 
@@ -20,14 +21,14 @@ public class UserBean implements Serializable {
     private String email;
     private String phone;
     private String role;           // PATIENT / STAFF / ADMIN
-    private Integer clinicId;      // only " STAFF " 先有工作地方 
+    private int clinicId;      // only " STAFF " 先有工作地方 
     private boolean active;
-
+    private LocalDateTime createdAt;
+    
     public UserBean() {
         // Must be reserved
     }
 
-    // ==================== Getter & Setter ====================
     public int getUserId() {
         return userId;
     }
@@ -99,4 +100,13 @@ public class UserBean implements Serializable {
     public void setActive(boolean active) {
         this.active = active;
     }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+    
 }

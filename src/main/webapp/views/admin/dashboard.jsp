@@ -16,10 +16,10 @@
     <title>職員主頁 - CCHC</title>
     <style>
         body { font-family: Arial; margin:0; padding:0; background:#f4f7f6; }
-        .header { background:#28a745; color:white; padding:15px; text-align:center; }
+        .header { background:#000000; color:white; padding:15px; text-align:center; }
         .container { max-width:1000px; margin:30px auto; padding:20px; background:white; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1); }
         .menu { display:flex; gap:15px; margin:20px 0; flex-wrap:wrap; }
-        .menu a { padding:12px 20px; background:#28a745; color:white; text-decoration:none; border-radius:5px; }
+        .menu a { padding:12px 20px; background:#000000; color:white; text-decoration:none; border-radius:5px; }
     </style>
 </head>
 <body>
