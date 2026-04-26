@@ -31,7 +31,7 @@
     
     <div class="container">
         <div class="menu">
-            <a href="../appointment/book.jsp">📅 預約診症</a>
+            <a href="${pageContext.request.contextPath}/patient/clinics.do">📅 預約診症</a>
             <a href="../appointment/myBookings.jsp">📋 我的預約</a>
             <a href="../queue/join.jsp">🚶 加入即日排隊</a>
             <a href="../patient/notifications.jsp">🛎 我的通知</a>
