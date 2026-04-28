@@ -5,35 +5,40 @@
 package com.cchc.controller.staff;
 
 import com.cchc.DAO.AppointmentDB;
+import com.cchc.DAO.ServiceDB;
 import com.cchc.bean.AppointmentBean;
+import com.cchc.bean.ClinicBean;
+import com.cchc.bean.ServiceBean;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 /**
  *
  * @author firetruck
  */
-
-
-
-@WebServlet(name = "GetAppServlet", urlPatterns = {"/GetAppServlet"})
+@WebServlet(name = "GetAppServlet", urlPatterns = {"/views/staff/GetAppServlet"})
 public class GetAppServlet extends HttpServlet {
+
     AppointmentDB adb;
-    AppointmentBean ab;
-    
+    ServiceDB sdb;
+
     public void init() {
         String dbUser = this.getServletContext().getInitParameter("dbUser");
         String dbPassword = this.getServletContext().getInitParameter("dbPassword");
         String dbUrl = this.getServletContext().getInitParameter("dbUrl");
 
         adb = new AppointmentDB(dbUrl, dbUser, dbPassword);
+        sdb = new ServiceDB(dbUrl, dbUser, dbPassword);
     }
-    
+
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
@@ -51,40 +56,63 @@ public class GetAppServlet extends HttpServlet {
         }
     }
 
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
-    /**
-     * Handles the HTTP <code>GET</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+    protected void doGet(HttpServletRequest req, HttpServletResponse res)
             throws ServletException, IOException {
-        processRequest(request, response);
+        HttpSession session = req.getSession();
+        ClinicBean cb = (ClinicBean) session.getAttribute("currentClinic");
+        AppointmentBean ab = new AppointmentBean();
+
+        try {
+
+            int clinicId = cb.getClinicId();
+            ab.setClinicId(clinicId);
+
+            ArrayList<ServiceBean> sbs = sdb.queryServiceByClinicId(clinicId);
+            req.setAttribute("serviceList", sbs);
+
+            String fullName = req.getParameter("fullname");
+            String status = req.getParameter("status");
+            String dateStr = req.getParameter("date");
+            String appIdStr = req.getParameter("appointmentId");
+            String serviceIdStr = req.getParameter("serviceId");
+
+            if (fullName != null && !fullName.isEmpty()) {
+                ab.setFullName(fullName);
+            }
+
+            if (status != null && !status.isEmpty()) {
+                ab.setStatus(status);
+            }
+
+            if (dateStr != null && !dateStr.isEmpty()) {
+                ab.setAppointmentDate(LocalDate.parse(dateStr));
+            }
+
+            if (appIdStr != null && !appIdStr.isEmpty()) {
+                ab.setAppointmentId(Integer.parseInt(appIdStr));
+            }
+            if (serviceIdStr != null && !serviceIdStr.isEmpty()) {
+                ab.setServiceId(Integer.parseInt(serviceIdStr));
+            }
+
+            ArrayList<AppointmentBean> abs = adb.queryAppointments(ab);
+
+            req.setAttribute("appointments", abs);
+
+            req.getRequestDispatcher("dashboard.jsp?page=appointmentList").forward(req, res);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    /**
-     * Handles the HTTP <code>POST</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         processRequest(request, response);
     }
 
-    /**
-     * Returns a short description of the servlet.
-     *
-     * @return a String containing servlet description
-     */
     @Override
     public String getServletInfo() {
         return "Short description";

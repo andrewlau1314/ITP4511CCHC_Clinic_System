@@ -30,25 +30,33 @@ public class AppointmentDB {
     public ArrayList<AppointmentBean> queryAppointments(AppointmentBean ab) {
         ArrayList<AppointmentBean> abs = new ArrayList<>();
 
-        StringBuilder sql = new StringBuilder("SELECT * FROM appointments WHERE is_deleted = 0");
+        StringBuilder sql = new StringBuilder(
+                "SELECT a.*, u.full_name, s.service_name FROM appointments a "
+                + "JOIN users u ON a.user_id = u.user_id "
+                + "JOIN services s ON a.service_id = s.service_id "
+                + "WHERE a.is_deleted = 0"
+        );
 
         if (ab.getClinicId() != 0) {
-            sql.append(" AND clinic_id = ?");
+            sql.append(" AND a.clinic_id = ?");
         }
         if (ab.getAppointmentId() != 0) {
-            sql.append(" AND appointment_id = ?");
+            sql.append(" AND a.appointment_id = ?");
         }
         if (ab.getUserId() != 0) {
-            sql.append(" AND user_id = ?");
+            sql.append(" AND a.user_id = ?");
+        }
+        if (ab.getFullName() != null && !ab.getFullName().isEmpty()) {
+            sql.append(" AND u.full_name = ?");
         }
         if (ab.getServiceId() != 0) {
-            sql.append(" AND service_id = ?");
+            sql.append(" AND a.service_id = ?");
         }
         if (ab.getAppointmentDate() != null) {
-            sql.append(" AND appointment_date = ?");
+            sql.append(" AND a.appointment_date = ?");
         }
         if (ab.getStatus() != null && !ab.getStatus().isEmpty()) {
-            sql.append(" AND status = ?");
+            sql.append(" AND a.status = ?");
         }
 
         try (Connection conn = DBConnection.getConnection(dbUrl, dbUser, dbPassword); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
@@ -64,6 +72,9 @@ public class AppointmentDB {
             if (ab.getUserId() != 0) {
                 ps.setInt(paramIndex++, ab.getUserId());
             }
+            if (ab.getFullName() != null && !ab.getFullName().isEmpty()) {
+                ps.setString(paramIndex++, ab.getFullName());
+            }
             if (ab.getServiceId() != 0) {
                 ps.setInt(paramIndex++, ab.getServiceId());
             }
@@ -76,18 +87,22 @@ public class AppointmentDB {
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    //result AppointmentBean
-                    AppointmentBean rsab = new AppointmentBean();
-                    rsab.setAppointmentId(rs.getInt("appointment_id"));
-                    rsab.setUserId(rs.getInt("user_id"));
-                    rsab.setClinicId(rs.getInt("clinic_id"));
-                    rsab.setServiceId(rs.getInt("service_id"));
-                    rsab.setAppointmentDate(rs.getDate("appointment_date").toLocalDate());
-                    rsab.setAppointmentTime(rs.getTime("appointment_time").toLocalTime());
-                    rsab.setStatus(rs.getString("status"));
-                    rsab.setCancelReason(rs.getString("cancel_reason"));
-                    rsab.setCreatedAt(rs.getObject("created_at", LocalDateTime.class));
-                    abs.add(rsab);
+                    //AppointmentBean result 
+                    AppointmentBean abrs = new AppointmentBean();
+                    
+                    abrs.setAppointmentId(rs.getInt("appointment_id"));
+                    abrs.setUserId(rs.getInt("user_id"));
+                    abrs.setClinicId(rs.getInt("clinic_id"));
+                    abrs.setServiceId(rs.getInt("service_id"));
+                    abrs.setAppointmentDate(rs.getDate("appointment_date").toLocalDate());
+                    abrs.setAppointmentTime(rs.getTime("appointment_time").toLocalTime());
+                    abrs.setStatus(rs.getString("status"));
+                    abrs.setCancelReason(rs.getString("cancel_reason"));
+                    abrs.setCreatedAt(rs.getObject("created_at", LocalDateTime.class));
+                    abrs.setFullName(rs.getString("full_name"));
+                    abrs.setServiceName(rs.getString("service_name"));
+                    
+                    abs.add(abrs);
                 }
             }
         } catch (SQLException e) {
