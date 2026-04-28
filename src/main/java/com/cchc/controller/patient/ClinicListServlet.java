@@ -1,26 +1,25 @@
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
  */
-package com.cchc.controller;
-
+package com.cchc.controller.patient;
 
 import com.cchc.DAO.ClinicDB;
-import com.cchc.DAO.ServiceDB;
 import com.cchc.bean.ClinicBean;
-import com.cchc.bean.ServiceBean;
 import java.io.IOException;
+import java.util.ArrayList;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
 /**
  *
- * @author user
+ * @author YourName
  */
-@WebServlet(name = "TimeslotListServlet", urlPatterns = {"/timeslots.do"})
-public class TimeslotListServlet extends HttpServlet {
+@WebServlet(name = "ClinicListServlet", urlPatterns = {"/patient/clinics.do"})
+public class ClinicListServlet extends HttpServlet {
 
     private ClinicDB clinicDB;
 
@@ -34,20 +33,22 @@ public class TimeslotListServlet extends HttpServlet {
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        response.setContentType("text/html;charset=UTF-8");
 
-        int clinicId = Integer.parseInt(request.getParameter("clinicId"));
-        int serviceId = Integer.parseInt(request.getParameter("serviceId"));
+        ArrayList<ClinicBean> clinics = clinicDB.getClinics();
 
-        ClinicBean clinic = clinicDB.queryClinicById(clinicId);
-
-        request.setAttribute("clinic", clinic);
-        request.setAttribute("serviceId", serviceId);
-
-        request.getRequestDispatcher("/views/patient/timeslotList.jsp").forward(request, response);
+        request.setAttribute("clinics", clinics);
+        request.getRequestDispatcher("/views/patient/clinicList.jsp").forward(request, response);
     }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        processRequest(request, response);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         processRequest(request, response);
     }
