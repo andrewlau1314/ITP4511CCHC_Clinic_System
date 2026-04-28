@@ -77,7 +77,8 @@
 
         <div class="container">
             <div class="menu">
-                <a href="dashboard.jsp?page=appointmentList">📅 預約管理</a> <a href="dashboard.jsp?page=checkin">✅ 病人報到</a>
+                <a href="GetAppServlet">📅 預約管理</a>
+                <a href="dashboard.jsp?page=checkin">✅ 病人報到</a>
                 <a href="dashboard.jsp?page=queueControl">🚶 叫號管理 (Extra)</a>
                 <a href="dashboard.jsp?page=serviceQuota">📊 服務名額設定</a>
                 <a href="../../logout.do" style="background:#dc3545;">🚪 登出</a>

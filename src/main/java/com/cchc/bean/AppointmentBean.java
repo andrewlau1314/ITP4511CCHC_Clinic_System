@@ -11,7 +11,6 @@ import java.time.*;
  *
  * @author firetruck
  */
-
 public class AppointmentBean implements Serializable {
 
     private int appointmentId;
@@ -23,7 +22,8 @@ public class AppointmentBean implements Serializable {
     private String status;
     private String cancelReason;
     private LocalDateTime createdAt;
-    
+    private String fullName;
+    private String serviceName;
 
     public AppointmentBean() {
     }
@@ -98,6 +98,22 @@ public class AppointmentBean implements Serializable {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+
+    public String getServiceName() {
+        return serviceName;
+    }
+
+    public void setServiceName(String serviceName) {
+        this.serviceName = serviceName;
     }
 
 }

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<taglib version="2.1" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-jsptaglibrary_2_1.xsd">
+    <tlib-version>1.0</tlib-version>
+    <short-name>cchc.tld</short-name>
+    <uri>/tlds/cchc.tld</uri>
+    <tag>
+        <name>serviceSelect</name>
+        <tag-class>com.cchc.tag.ServiceSelectTag</tag-class>
+        <body-content>empty</body-content>
+    </tag>
+
+    <tag>
+        <name>appointmentTable</name>
+        <tag-class>com.cchc.tag.AppointmentTableTag</tag-class>
+        <body-content>empty</body-content>
+    </tag>
+</taglib>
