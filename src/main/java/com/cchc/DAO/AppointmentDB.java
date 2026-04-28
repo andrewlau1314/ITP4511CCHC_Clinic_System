@@ -202,4 +202,75 @@ public class AppointmentDB {
     }
 
 //================delete====================
+
+
+// ==================== 取得某診所 + 某服務的可用時段 Get Clinic and check this Clininc what time can be booking====================
+    public ArrayList<AppointmentBean> getAvailableTimeslots(int clinicId, int serviceId) {
+        ArrayList<AppointmentBean> list = new ArrayList<>();
+        String sql = "SELECT * FROM timeslots WHERE clinic_id = ? AND service_id = ? AND booked < quota ORDER BY date, start_time";
+
+        try (Connection conn = DBConnection.getConnection(dbUrl, dbUser, dbPassword);
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, clinicId);
+            ps.setInt(2, serviceId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    AppointmentBean ab = new AppointmentBean();
+                    ab.setAppointmentId(rs.getInt("timeslot_id"));   // 借用 appointment_id 欄位存 timeslot_id
+                    ab.setClinicId(rs.getInt("clinic_id"));
+                    ab.setServiceId(rs.getInt("service_id"));
+                    ab.setAppointmentDate(rs.getDate("date").toLocalDate());
+                    ab.setAppointmentTime(rs.getTime("start_time").toLocalTime());
+                    // 可自行加入 end_time 如果 Bean 有這個欄位
+                    list.add(ab);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+    
+    // ==================== 新邏輯：檢查該時段已確認預約數量 ====================
+    public int countConfirmedBookings(int clinicId, java.time.LocalDate date, java.time.LocalTime time) {
+        String sql = "SELECT COUNT(*) FROM appointments " +
+                     "WHERE clinic_id = ? AND appointment_date = ? " +
+                     "AND appointment_time = ? AND status = 'CONFIRMED' AND is_deleted = 0";
+
+        try (Connection conn = DBConnection.getConnection(dbUrl, dbUser, dbPassword);
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, clinicId);
+            ps.setDate(2, java.sql.Date.valueOf(date));
+            ps.setTime(3, java.sql.Time.valueOf(time));
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    // ==================== 新邏輯：取得某日期的所有可能時間段（可自訂） ====================
+    public ArrayList<String> getAvailableTimesForDate(int clinicId, int serviceId, java.time.LocalDate date) {
+        ArrayList<String> times = new ArrayList<>();
+        // 這裡先用固定時段（可之後改成從資料庫讀取）
+        String[] possibleTimes = {"09:00:00", "09:30:00", "10:00:00", "10:30:00", "11:00:00", 
+                                  "14:00:00", "14:30:00", "15:00:00", "15:30:00"};
+
+        for (String t : possibleTimes) {
+            java.time.LocalTime time = java.time.LocalTime.parse(t);
+            int count = countConfirmedBookings(clinicId, date, time);
+            if (count < 10) {
+                times.add(t);
+            }
+        }
+        return times;
+    }
 }

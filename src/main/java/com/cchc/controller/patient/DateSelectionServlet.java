@@ -1,22 +1,26 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package com.cchc.controller.patient;
 
 import com.cchc.DAO.ClinicDB;
-import com.cchc.DAO.ServiceDB;
 import com.cchc.bean.ClinicBean;
-import com.cchc.bean.ServiceBean;
 import java.io.IOException;
-import java.util.ArrayList;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-@WebServlet(name = "ServiceListServlet", urlPatterns = {"/services.do"})
-public class ServiceListServlet extends HttpServlet {
+/**
+ *
+ * @author user
+ */
+@WebServlet(name = "DateSelectionServlet", urlPatterns = {"/dateSelection.do"})
+public class DateSelectionServlet extends HttpServlet {
 
     private ClinicDB clinicDB;
-    private ServiceDB serviceDB;
 
     @Override
     public void init() {
@@ -25,23 +29,20 @@ public class ServiceListServlet extends HttpServlet {
         String dbPassword = this.getServletContext().getInitParameter("dbPassword");
         
         clinicDB = new ClinicDB(dbUrl, dbUser, dbPassword);
-        serviceDB = new ServiceDB(dbUrl, dbUser, dbPassword);
     }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // 只接收 clinicId
         int clinicId = Integer.parseInt(request.getParameter("clinicId"));
+        int serviceId = Integer.parseInt(request.getParameter("serviceId"));
 
         ClinicBean clinic = clinicDB.queryClinicById(clinicId);
-        ArrayList<ServiceBean> services = serviceDB.queryServiceByClinicId(clinicId);
 
         request.setAttribute("clinic", clinic);
-        request.setAttribute("services", services);
+        request.setAttribute("serviceId", serviceId);
 
-        // 跳轉到日期選擇頁面（新邏輯）
-        request.getRequestDispatcher("/views/patient/serviceList.jsp").forward(request, response);
+        request.getRequestDispatcher("/views/patient/dateSelection.jsp").forward(request, response);
     }
 
     @Override

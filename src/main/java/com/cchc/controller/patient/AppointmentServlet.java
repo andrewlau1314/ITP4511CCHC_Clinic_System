@@ -8,6 +8,8 @@ import com.cchc.DAO.AppointmentDB;
 import com.cchc.bean.AppointmentBean;
 import com.cchc.bean.UserBean;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -15,10 +17,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-/**
- *
- * @author firetruck
- */
 @WebServlet(name = "AppointmentServlet", urlPatterns = {"/book.do"})
 public class AppointmentServlet extends HttpServlet {
 
@@ -32,7 +30,7 @@ public class AppointmentServlet extends HttpServlet {
         adb = new AppointmentDB(dbUrl, dbUser, dbPassword);
     }
 
-        protected void processRequest(HttpServletRequest request, HttpServletResponse response)
+    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
         HttpSession session = request.getSession();
@@ -44,18 +42,26 @@ public class AppointmentServlet extends HttpServlet {
         }
 
         try {
-            int userId = currentUser.getUserId();
             int clinicId = Integer.parseInt(request.getParameter("clinicId"));
             int serviceId = Integer.parseInt(request.getParameter("serviceId"));
-            String appointmentDateStr = request.getParameter("appointmentDate");
-            String appointmentTimeStr = request.getParameter("appointmentTime");
+            LocalDate date = LocalDate.parse(request.getParameter("appointmentDate"));
+            LocalTime time = LocalTime.parse(request.getParameter("appointmentTime"));
+
+            // 新邏輯：檢查 CONFIRMED 是否已滿 10 人
+            int confirmedCount = adb.countConfirmedBookings(clinicId, date, time);
+
+            if (confirmedCount >= 10) {
+                request.setAttribute("error", "❌ 此時段已滿（最多 10 人），請選擇其他時間！");
+                request.getRequestDispatcher("/views/patient/timeSelection.jsp").forward(request, response);
+                return;
+            }
 
             AppointmentBean ab = new AppointmentBean();
-            ab.setUserId(userId);
+            ab.setUserId(currentUser.getUserId());
             ab.setClinicId(clinicId);
             ab.setServiceId(serviceId);
-            ab.setAppointmentDate(java.time.LocalDate.parse(appointmentDateStr));
-            ab.setAppointmentTime(java.time.LocalTime.parse(appointmentTimeStr));
+            ab.setAppointmentDate(date);
+            ab.setAppointmentTime(time);
 
             boolean success = adb.addAppointment(ab);
 
@@ -63,13 +69,14 @@ public class AppointmentServlet extends HttpServlet {
                 request.setAttribute("message", "🎉 預約成功！");
                 request.getRequestDispatcher("/views/patient/bookingSuccess.jsp").forward(request, response);
             } else {
-                request.setAttribute("error", "❌ 預約失敗！該時段可能已被預約。");
-                request.getRequestDispatcher("/views/patient/timeslotList.jsp").forward(request, response);
+                request.setAttribute("error", "❌ 預約失敗，請稍後再試！");
+                request.getRequestDispatcher("/views/patient/timeSelection.jsp").forward(request, response);
             }
+
         } catch (Exception e) {
             e.printStackTrace();
             request.setAttribute("error", "系統錯誤，請稍後再試！");
-            request.getRequestDispatcher("/views/patient/timeslotList.jsp").forward(request, response);
+            request.getRequestDispatcher("/views/patient/timeSelection.jsp").forward(request, response);
         }
     }
 
