@@ -5,85 +5,83 @@
 package com.cchc.controller.patient;
 
 import com.cchc.DAO.AppointmentDB;
+import com.cchc.bean.AppointmentBean;
+import com.cchc.bean.UserBean;
 import java.io.IOException;
-import java.io.PrintWriter;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 /**
  *
  * @author firetruck
  */
-@WebServlet(name = "AppointmentServlet", urlPatterns = {"/AppointmentServlet"})
+@WebServlet(name = "AppointmentServlet", urlPatterns = {"/book.do"})
 public class AppointmentServlet extends HttpServlet {
 
-    AppointmentDB adb;
+    private AppointmentDB adb;
 
+    @Override
     public void init() {
+        String dbUrl = this.getServletContext().getInitParameter("dbUrl");
         String dbUser = this.getServletContext().getInitParameter("dbUser");
         String dbPassword = this.getServletContext().getInitParameter("dbPassword");
-        String dbUrl = this.getServletContext().getInitParameter("dbUrl");
-
         adb = new AppointmentDB(dbUrl, dbUser, dbPassword);
     }
 
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
+        protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet AppointmentServlet</title>");
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet AppointmentServlet at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
+
+        HttpSession session = request.getSession();
+        UserBean currentUser = (UserBean) session.getAttribute("currentUser");
+
+        if (currentUser == null) {
+            response.sendRedirect(request.getContextPath() + "/views/common/login.jsp");
+            return;
+        }
+
+        try {
+            int userId = currentUser.getUserId();
+            int clinicId = Integer.parseInt(request.getParameter("clinicId"));
+            int serviceId = Integer.parseInt(request.getParameter("serviceId"));
+            String appointmentDateStr = request.getParameter("appointmentDate");
+            String appointmentTimeStr = request.getParameter("appointmentTime");
+
+            AppointmentBean ab = new AppointmentBean();
+            ab.setUserId(userId);
+            ab.setClinicId(clinicId);
+            ab.setServiceId(serviceId);
+            ab.setAppointmentDate(java.time.LocalDate.parse(appointmentDateStr));
+            ab.setAppointmentTime(java.time.LocalTime.parse(appointmentTimeStr));
+
+            boolean success = adb.addAppointment(ab);
+
+            if (success) {
+                request.setAttribute("message", "🎉 預約成功！");
+                request.getRequestDispatcher("/views/patient/bookingSuccess.jsp").forward(request, response);
+            } else {
+                request.setAttribute("error", "❌ 預約失敗！該時段可能已被預約。");
+                request.getRequestDispatcher("/views/patient/timeslotList.jsp").forward(request, response);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("error", "系統錯誤，請稍後再試！");
+            request.getRequestDispatcher("/views/patient/timeslotList.jsp").forward(request, response);
         }
     }
 
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
-    /**
-     * Handles the HTTP <code>GET</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         processRequest(request, response);
     }
 
-    /**
-     * Handles the HTTP <code>POST</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         processRequest(request, response);
     }
-
-    /**
-     * Returns a short description of the servlet.
-     *
-     * @return a String containing servlet description
-     */
-    @Override
-    public String getServletInfo() {
-        return "Short description";
-    }// </editor-fold>
-
 }
