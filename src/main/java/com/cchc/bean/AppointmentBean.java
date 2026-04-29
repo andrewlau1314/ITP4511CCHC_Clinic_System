@@ -115,5 +115,23 @@ public class AppointmentBean implements Serializable {
     public void setServiceName(String serviceName) {
         this.serviceName = serviceName;
     }
+        // ==================== 報表用：顯示名稱 ====================
+    private String clinicName;
+    private String patientName;
 
+    public String getClinicName() {
+        return clinicName;
+    }
+
+    public void setClinicName(String clinicName) {
+        this.clinicName = clinicName;
+    }
+
+    public String getPatientName() {
+        return patientName;
+    }
+
+    public void setPatientName(String patientName) {
+        this.patientName = patientName;
+    }
 }

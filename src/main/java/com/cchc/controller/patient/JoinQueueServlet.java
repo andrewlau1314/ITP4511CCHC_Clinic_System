@@ -27,7 +27,7 @@ public class JoinQueueServlet extends HttpServlet {
         String dbUrl = this.getServletContext().getInitParameter("dbUrl");
         String dbUser = this.getServletContext().getInitParameter("dbUser");
         String dbPassword = this.getServletContext().getInitParameter("dbPassword");
-        
+       
         clinicDB = new ClinicDB(dbUrl, dbUser, dbPassword);
         serviceDB = new ServiceDB(dbUrl, dbUser, dbPassword);
         queueDB = new QueueDB(dbUrl, dbUser, dbPassword);
@@ -44,37 +44,41 @@ public class JoinQueueServlet extends HttpServlet {
             return;
         }
 
-        // GET → 顯示表單
+        // 每次都準備好 clinics 和 services（錯誤時也需要）
+        ArrayList<ClinicBean> clinics = clinicDB.getClinics();
+        ArrayList<ServiceBean> services = serviceDB.getAllServices();
+
+        request.setAttribute("clinics", clinics);
+        request.setAttribute("services", services);
+
         if ("GET".equals(request.getMethod())) {
-            ArrayList<ClinicBean> clinics = clinicDB.getClinics();
-            ArrayList<ServiceBean> services = serviceDB.queryServiceByClinicId(1); // 可改成全部服務
-
-            request.setAttribute("clinics", clinics);
-            request.setAttribute("services", services);
-
             request.getRequestDispatcher("/views/queue/join.jsp").forward(request, response);
-            return;
-        }
 
-              // POST 請求 → 執行加入排隊
-        try {
-            int clinicId = Integer.parseInt(request.getParameter("clinicId"));
-            int serviceId = Integer.parseInt(request.getParameter("serviceId"));
+        } else {
+            // POST：執行加入排隊
+            try {
+                int clinicId = Integer.parseInt(request.getParameter("clinicId"));
+                int serviceId = Integer.parseInt(request.getParameter("serviceId"));
 
-            String queueNumber = queueDB.joinQueue(currentUser.getUserId(), clinicId, serviceId);
+                String result = queueDB.joinQueue(currentUser.getUserId(), clinicId, serviceId);
 
-            if (queueNumber != null) {
-                request.setAttribute("message", "🎉 您已成功加入即日排隊！");
-                request.setAttribute("queueNumber", queueNumber);   // 傳真實號碼
-                request.getRequestDispatcher("/views/queue/queueStatus.jsp").forward(request, response);
-            } else {
-                request.setAttribute("error", "❌ 加入排隊失敗，請稍後再試！");
+                if ("DUPLICATE".equals(result)) {
+                    request.setAttribute("error", "❌ 您今天已經在此診所/服務排隊了！請勿重複加入。");
+                    request.getRequestDispatcher("/views/queue/join.jsp").forward(request, response);
+                } else if (result != null && result.startsWith("Q")) {
+                    request.setAttribute("message", "🎉 排隊成功！");
+                    request.setAttribute("queueNumber", result);
+                    request.getRequestDispatcher("/views/queue/queueStatus.jsp").forward(request, response);
+                } else {
+                    request.setAttribute("error", "❌ 加入排隊失敗，請稍後再試！");
+                    request.getRequestDispatcher("/views/queue/join.jsp").forward(request, response);
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                request.setAttribute("error", "❌ 系統錯誤，請稍後再試！");
                 request.getRequestDispatcher("/views/queue/join.jsp").forward(request, response);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            request.setAttribute("error", "系統錯誤，請稍後再試！");
-            request.getRequestDispatcher("/views/queue/join.jsp").forward(request, response);
         }
     }
 

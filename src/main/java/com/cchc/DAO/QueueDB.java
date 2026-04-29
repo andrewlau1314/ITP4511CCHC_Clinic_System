@@ -23,29 +23,37 @@ public class QueueDB {
     // 加入即日排隊
     // 加入即日排隊（修正後版本）
        // 加入即日排隊（真實連續號碼 Q001, Q002...）
+        // ==================== 加入即日排隊（含重複檢查） ====================
     public String joinQueue(int userId, int clinicId, int serviceId) {
-        String queueNumber = "";
-
-        // 1. 先取得今天該診所目前排隊人數
-        String countSql = "SELECT COUNT(*) FROM queues WHERE clinic_id = ? AND date = CURDATE() AND status = 'WAITING'";
-        int currentCount = 0;
+        // 規則檢查：同一天、同診所、同服務，只能有一張有效排隊票
+        String checkSql = "SELECT COUNT(*) FROM queues WHERE user_id = ? " +
+                          "AND clinic_id = ? AND service_id = ? " +
+                          "AND date = CURDATE() AND status = 'WAITING'";
 
         try (Connection conn = DBConnection.getConnection(dbUrl, dbUser, dbPassword);
-             PreparedStatement ps = conn.prepareStatement(countSql)) {
+             PreparedStatement psCheck = conn.prepareStatement(checkSql)) {
 
-            ps.setInt(1, clinicId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) currentCount = rs.getInt(1);
+            psCheck.setInt(1, userId);
+            psCheck.setInt(2, clinicId);
+            psCheck.setInt(3, serviceId);
+
+            try (ResultSet rs = psCheck.executeQuery()) {
+                if (rs.next() && rs.getInt(1) > 0) {
+                    return "DUPLICATE";   // 已存在有效排隊票
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            return null;
         }
 
-        queueNumber = "Q" + String.format("%03d", currentCount + 1);
+        // 取得目前號碼
+        int currentCount = getCurrentWaitingCount(clinicId);
+        String queueNumber = "Q" + String.format("%03d", currentCount + 1);
 
-        // 2. 插入排隊記錄
-        String insertSql = "INSERT INTO queues (user_id, clinic_id, service_id, date, queue_number, status) " +
-                           "VALUES (?, ?, ?, CURDATE(), ?, 'WAITING')";
+        // 新增排隊記錄
+        String insertSql = "INSERT INTO queues (user_id, clinic_id, service_id, queue_number, date, status) " +
+                           "VALUES (?, ?, ?, ?, CURDATE(), 'WAITING')";
 
         try (Connection conn = DBConnection.getConnection(dbUrl, dbUser, dbPassword);
              PreparedStatement ps = conn.prepareStatement(insertSql)) {
@@ -55,13 +63,29 @@ public class QueueDB {
             ps.setInt(3, serviceId);
             ps.setString(4, queueNumber);
 
-            ps.executeUpdate();
+            if (ps.executeUpdate() > 0) {
+                return queueNumber;
+            }
         } catch (SQLException e) {
             e.printStackTrace();
-            return null;
         }
+        return null;
+    }
 
-        return queueNumber;   // 回傳真實號碼
+    // 輔助方法：取得該診所目前等待人數
+    private int getCurrentWaitingCount(int clinicId) {
+        String sql = "SELECT COUNT(*) FROM queues WHERE clinic_id = ? AND date = CURDATE() AND status = 'WAITING'";
+        try (Connection conn = DBConnection.getConnection(dbUrl, dbUser, dbPassword);
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, clinicId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
     }
 
     // 取得目前排隊狀況（今天該診所的等待人數）

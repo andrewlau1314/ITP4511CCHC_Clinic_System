@@ -49,7 +49,9 @@
         </form>
 
         <br>
-        <a href="${pageContext.request.contextPath}/patient/clinics.do">← 返回預約首頁 / Back to Booking</a>
+        <a href="${pageContext.request.contextPath}/views/patient/dashboard.jsp">
+        <button>
+        ← 返回首頁 / Back to Home</button></a>
     </div>
 </body>
 </html>

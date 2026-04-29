@@ -402,5 +402,69 @@ public class AppointmentDB {
         }
         return list;
     }
+    
 
+    
+        // ==================== 報表用：顯示名稱 ====================
+    private String clinicName;
+    private String patientName;
+
+    public String getClinicName() { return clinicName; }
+    public void setClinicName(String clinicName) { this.clinicName = clinicName; }
+
+    public String getPatientName() { return patientName; }
+    public void setPatientName(String patientName) { this.patientName = patientName; }
+            // ==================== 管理員報表：依條件查詢預約（顯示名稱） ====================
+    public ArrayList<AppointmentBean> getAppointmentsWithFilter(Integer clinicId, Integer serviceId, 
+                                                                String monthYear, String status) {
+        ArrayList<AppointmentBean> list = new ArrayList<>();
+        
+        StringBuilder sql = new StringBuilder(
+            "SELECT a.*, c.name as clinic_name, u.full_name as patient_name " +
+            "FROM appointments a " +
+            "LEFT JOIN clinics c ON a.clinic_id = c.clinic_id " +
+            "LEFT JOIN users u ON a.user_id = u.user_id " +
+            "WHERE a.is_deleted = 0"
+        );
+
+        if (clinicId != null) sql.append(" AND a.clinic_id = ?");
+        if (serviceId != null) sql.append(" AND a.service_id = ?");
+        if (monthYear != null && !monthYear.isEmpty()) sql.append(" AND DATE_FORMAT(a.appointment_date, '%Y-%m') = ?");
+        if (status != null && !status.isEmpty()) sql.append(" AND a.status = ?");
+
+        sql.append(" ORDER BY a.appointment_date DESC, a.appointment_time DESC");
+
+        try (Connection conn = DBConnection.getConnection(dbUrl, dbUser, dbPassword);
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+            int paramIndex = 1;
+            if (clinicId != null) ps.setInt(paramIndex++, clinicId);
+            if (serviceId != null) ps.setInt(paramIndex++, serviceId);
+            if (monthYear != null && !monthYear.isEmpty()) ps.setString(paramIndex++, monthYear);
+            if (status != null && !status.isEmpty()) ps.setString(paramIndex++, status);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    AppointmentBean ab = new AppointmentBean();
+                    ab.setAppointmentId(rs.getInt("appointment_id"));
+                    ab.setUserId(rs.getInt("user_id"));
+                    ab.setClinicId(rs.getInt("clinic_id"));
+                    ab.setServiceId(rs.getInt("service_id"));
+                    ab.setAppointmentDate(rs.getDate("appointment_date").toLocalDate());
+                    ab.setAppointmentTime(rs.getTime("appointment_time").toLocalTime());
+                    ab.setStatus(rs.getString("status"));
+                    ab.setCancelReason(rs.getString("cancel_reason"));
+
+                    // 新增名稱
+                    ab.setClinicName(rs.getString("clinic_name"));
+                    ab.setPatientName(rs.getString("patient_name"));
+
+                    list.add(ab);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
 }
