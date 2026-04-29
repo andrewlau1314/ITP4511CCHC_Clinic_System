@@ -288,4 +288,56 @@ public class AppointmentDB {
         }
         return times;
     }
+
+    // ==================== 查詢某用戶的所有預約 Check User Appointment====================
+    public ArrayList<AppointmentBean> queryAppointmentsByUser(int userId) {
+        ArrayList<AppointmentBean> list = new ArrayList<>();
+        String sql = "SELECT a.*, c.name as clinic_name, s.service_name " +
+                     "FROM appointments a " +
+                     "JOIN clinics c ON a.clinic_id = c.clinic_id " +
+                     "JOIN services s ON a.service_id = s.service_id " +
+                     "WHERE a.user_id = ? AND a.is_deleted = 0 " +
+                     "ORDER BY a.appointment_date DESC, a.appointment_time DESC";
+
+        try (Connection conn = DBConnection.getConnection(dbUrl, dbUser, dbPassword);
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, userId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    AppointmentBean ab = new AppointmentBean();
+                    ab.setAppointmentId(rs.getInt("appointment_id"));
+                    ab.setClinicId(rs.getInt("clinic_id"));
+                    ab.setServiceId(rs.getInt("service_id"));
+                    ab.setAppointmentDate(rs.getDate("appointment_date").toLocalDate());
+                    ab.setAppointmentTime(rs.getTime("appointment_time").toLocalTime());
+                    ab.setStatus(rs.getString("status"));
+                    ab.setCancelReason(rs.getString("cancel_reason"));
+                    // 可自行加入 clinicName 和 serviceName 如果你的 Bean 有這些欄位
+                    list.add(ab);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    // ==================== 取消預約 Cancel Appointment by UserSide====================
+    public boolean cancelAppointment(int appointmentId, int userId) {
+        String sql = "UPDATE appointments SET status = 'CANCELLED', cancel_reason = '用戶自行取消' " +
+                     "WHERE appointment_id = ? AND user_id = ? AND status = 'PENDING' AND is_deleted = 0";
+        
+        try (Connection conn = DBConnection.getConnection(dbUrl, dbUser, dbPassword);
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, appointmentId);
+            ps.setInt(2, userId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }
