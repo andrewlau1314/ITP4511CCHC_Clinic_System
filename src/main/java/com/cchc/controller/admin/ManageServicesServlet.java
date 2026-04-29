@@ -1,9 +1,8 @@
-package com.cchc.controller.patient;
+package com.cchc.controller.admin;
 
-import com.cchc.DAO.ClinicDB;
 import com.cchc.DAO.ServiceDB;
-import com.cchc.bean.ClinicBean;
 import com.cchc.bean.ServiceBean;
+import com.cchc.bean.UserBean;
 import java.io.IOException;
 import java.util.ArrayList;
 import javax.servlet.ServletException;
@@ -11,11 +10,11 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
-@WebServlet(name = "ServiceListServlet", urlPatterns = {"/services.do"})
-public class ServiceListServlet extends HttpServlet {
+@WebServlet(name = "ManageServicesServlet", urlPatterns = {"/admin/manageServices.do"})
+public class ManageServicesServlet extends HttpServlet {
 
-    private ClinicDB clinicDB;
     private ServiceDB serviceDB;
 
     @Override
@@ -23,25 +22,24 @@ public class ServiceListServlet extends HttpServlet {
         String dbUrl = this.getServletContext().getInitParameter("dbUrl");
         String dbUser = this.getServletContext().getInitParameter("dbUser");
         String dbPassword = this.getServletContext().getInitParameter("dbPassword");
-        
-        clinicDB = new ClinicDB(dbUrl, dbUser, dbPassword);
         serviceDB = new ServiceDB(dbUrl, dbUser, dbPassword);
     }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // 只接收 clinicId
-        int clinicId = Integer.parseInt(request.getParameter("clinicId"));
+        HttpSession session = request.getSession();
+        UserBean currentUser = (UserBean) session.getAttribute("currentUser");
 
-        ClinicBean clinic = clinicDB.queryClinicById(clinicId);
-        ArrayList<ServiceBean> services = serviceDB.queryServiceByClinicId(clinicId);
+        if (currentUser == null || !"ADMIN".equals(currentUser.getRole())) {
+            response.sendRedirect(request.getContextPath() + "/views/common/login.jsp");
+            return;
+        }
 
-        request.setAttribute("clinic", clinic);
+        ArrayList<ServiceBean> services = serviceDB.getAllServices();   // 我們會在下一步加上這個方法
+
         request.setAttribute("services", services);
-
-        // 跳轉到日期選擇頁面（新邏輯）
-        request.getRequestDispatcher("/views/patient/serviceList.jsp").forward(request, response);
+        request.getRequestDispatcher("/views/admin/manageServices.jsp").forward(request, response);
     }
 
     @Override

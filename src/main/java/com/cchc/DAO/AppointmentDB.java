@@ -13,6 +13,7 @@ import com.cchc.util.DBConnection;
 import java.sql.*;
 import java.time.*;
 import java.util.ArrayList;
+import java.util.Map;
 
 public class AppointmentDB {
 
@@ -258,4 +259,189 @@ public class AppointmentDB {
     }
 
 //================delete====================
+
+
+// ==================== 取得某診所 + 某服務的可用時段 Get Clinic and check this Clininc what time can be booking====================
+    public ArrayList<AppointmentBean> getAvailableTimeslots(int clinicId, int serviceId) {
+        ArrayList<AppointmentBean> list = new ArrayList<>();
+        String sql = "SELECT * FROM timeslots WHERE clinic_id = ? AND service_id = ? AND booked < quota ORDER BY date, start_time";
+
+        try (Connection conn = DBConnection.getConnection(dbUrl, dbUser, dbPassword);
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, clinicId);
+            ps.setInt(2, serviceId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    AppointmentBean ab = new AppointmentBean();
+                    ab.setAppointmentId(rs.getInt("timeslot_id"));   // 借用 appointment_id 欄位存 timeslot_id
+                    ab.setClinicId(rs.getInt("clinic_id"));
+                    ab.setServiceId(rs.getInt("service_id"));
+                    ab.setAppointmentDate(rs.getDate("date").toLocalDate());
+                    ab.setAppointmentTime(rs.getTime("start_time").toLocalTime());
+                    // 可自行加入 end_time 如果 Bean 有這個欄位
+                    list.add(ab);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+    
+    // ==================== 新邏輯：檢查該時段已確認預約數量 ====================
+    public int countConfirmedBookings(int clinicId, java.time.LocalDate date, java.time.LocalTime time) {
+        String sql = "SELECT COUNT(*) FROM appointments " +
+                     "WHERE clinic_id = ? AND appointment_date = ? " +
+                     "AND appointment_time = ? AND status = 'CONFIRMED' AND is_deleted = 0";
+
+        try (Connection conn = DBConnection.getConnection(dbUrl, dbUser, dbPassword);
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, clinicId);
+            ps.setDate(2, java.sql.Date.valueOf(date));
+            ps.setTime(3, java.sql.Time.valueOf(time));
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    // ==================== 新邏輯：取得某日期的所有可能時間段（可自訂） ====================
+    public ArrayList<String> getAvailableTimesForDate(int clinicId, int serviceId, java.time.LocalDate date) {
+        ArrayList<String> times = new ArrayList<>();
+        // 這裡先用固定時段（可之後改成從資料庫讀取）
+        String[] possibleTimes = {"09:00:00", "09:30:00", "10:00:00", "10:30:00", "11:00:00", 
+                                  "14:00:00", "14:30:00", "15:00:00", "15:30:00"};
+
+        for (String t : possibleTimes) {
+            java.time.LocalTime time = java.time.LocalTime.parse(t);
+            int count = countConfirmedBookings(clinicId, date, time);
+            if (count < 10) {
+                times.add(t);
+            }
+        }
+        return times;
+    }
+
+    // ==================== 查詢某用戶的所有預約 Check User Appointment====================
+    public ArrayList<AppointmentBean> queryAppointmentsByUser(int userId) {
+        ArrayList<AppointmentBean> list = new ArrayList<>();
+        String sql = "SELECT a.*, c.name as clinic_name, s.service_name " +
+                     "FROM appointments a " +
+                     "JOIN clinics c ON a.clinic_id = c.clinic_id " +
+                     "JOIN services s ON a.service_id = s.service_id " +
+                     "WHERE a.user_id = ? AND a.is_deleted = 0 " +
+                     "ORDER BY a.appointment_date DESC, a.appointment_time DESC";
+
+        try (Connection conn = DBConnection.getConnection(dbUrl, dbUser, dbPassword);
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, userId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    AppointmentBean ab = new AppointmentBean();
+                    ab.setAppointmentId(rs.getInt("appointment_id"));
+                    ab.setClinicId(rs.getInt("clinic_id"));
+                    ab.setServiceId(rs.getInt("service_id"));
+                    ab.setAppointmentDate(rs.getDate("appointment_date").toLocalDate());
+                    ab.setAppointmentTime(rs.getTime("appointment_time").toLocalTime());
+                    ab.setStatus(rs.getString("status"));
+                    ab.setCancelReason(rs.getString("cancel_reason"));
+                    // 可自行加入 clinicName 和 serviceName 如果你的 Bean 有這些欄位
+                    list.add(ab);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    // ==================== 取消預約 Cancel Appointment by UserSide====================
+    public boolean cancelAppointment(int appointmentId, int userId) {
+        String sql = "UPDATE appointments SET status = 'CANCELLED', cancel_reason = '用戶自行取消' " +
+                     "WHERE appointment_id = ? AND user_id = ? AND status = 'PENDING' AND is_deleted = 0";
+        
+        try (Connection conn = DBConnection.getConnection(dbUrl, dbUser, dbPassword);
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, appointmentId);
+            ps.setInt(2, userId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+    
+        // ==================== 報表用：總預約數 ====================
+    public int getTotalBookings() {
+        String sql = "SELECT COUNT(*) FROM appointments WHERE is_deleted = 0";
+        try (Connection conn = DBConnection.getConnection(dbUrl, dbUser, dbPassword);
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) return rs.getInt(1);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    // ==================== 報表用：依狀態統計 ====================
+    public int getBookingsByStatus(String status) {
+        String sql = "SELECT COUNT(*) FROM appointments WHERE status = ? AND is_deleted = 0";
+        try (Connection conn = DBConnection.getConnection(dbUrl, dbUser, dbPassword);
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, status);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+    
+        // ==================== 每月預約統計 ====================
+    public Map<String, Integer> getMonthlyBookings() {
+        // 簡化版：最近6個月統計
+        // 你可以之後再擴充成更完整的
+        return new java.util.HashMap<>(); // 先留空，之後再實作詳細版
+    }
+
+    // ==================== 各診所預約統計 ====================
+    public ArrayList<Map<String, Object>> getBookingsByClinic() {
+        ArrayList<Map<String, Object>> list = new ArrayList<>();
+        String sql = "SELECT c.name as clinic_name, COUNT(a.appointment_id) as total, " +
+                     "SUM(CASE WHEN a.status = 'CONFIRMED' THEN 1 ELSE 0 END) as confirmed " +
+                     "FROM clinics c LEFT JOIN appointments a ON c.clinic_id = a.clinic_id " +
+                     "WHERE a.is_deleted = 0 GROUP BY c.clinic_id, c.name ORDER BY total DESC";
+
+        try (Connection conn = DBConnection.getConnection(dbUrl, dbUser, dbPassword);
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                Map<String, Object> map = new java.util.HashMap<>();
+                map.put("clinicName", rs.getString("clinic_name"));
+                map.put("total", rs.getInt("total"));
+                map.put("confirmed", rs.getInt("confirmed"));
+                list.add(map);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
 }

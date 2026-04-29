@@ -93,34 +93,32 @@ CREATE TABLE timeslots
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 6. 排隊表
--- CREATE TABLE queues
--- (
---     queue_id           INT PRIMARY KEY AUTO_INCREMENT,
---     user_id            INT,
---     clinic_id          INT,
---     service_id         INT,
---     date               DATE NOT NULL,
---     queue_number       VARCHAR(10),
---     status             ENUM('WAITING','CALLED','SKIPPED','COMPLETED','EXPIRED') DEFAULT 'WAITING',
---     estimated_wait_min INT,
---     joined_at          DATETIME DEFAULT CURRENT_TIMESTAMP,
---     FOREIGN KEY (user_id) REFERENCES users (user_id),
---     FOREIGN KEY (clinic_id) REFERENCES clinics (clinic_id),
---     FOREIGN KEY (service_id) REFERENCES services (service_id)
--- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE queues (
+    queue_id           INT PRIMARY KEY AUTO_INCREMENT,
+    user_id            INT,
+    clinic_id          INT,
+    service_id         INT,
+    date               DATE NOT NULL,
+    queue_number       VARCHAR(10),
+    status             ENUM('WAITING','CALLED','SKIPPED','COMPLETED','EXPIRED') DEFAULT 'WAITING',
+    estimated_wait_min INT,
+    joined_at          DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users (user_id),
+    FOREIGN KEY (clinic_id) REFERENCES clinics (clinic_id),
+    FOREIGN KEY (service_id) REFERENCES services (service_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- -- 7. 通知表
--- CREATE TABLE notifications
--- (
---     notif_id   INT PRIMARY KEY AUTO_INCREMENT,
---     user_id    INT,
---     title      VARCHAR(100),
---     message    TEXT,
---     is_read    TINYINT  DEFAULT 0,
---     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
---     type       ENUM('APPOINTMENT','QUEUE','SYSTEM'),
---     FOREIGN KEY (user_id) REFERENCES users (user_id)
--- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE notifications (
+    notif_id    INT PRIMARY KEY AUTO_INCREMENT,
+    user_id     INT NOT NULL,
+    title       VARCHAR(100) NOT NULL,
+    message     TEXT,
+    is_read     TINYINT DEFAULT 0,
+    created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+    type        ENUM('APPOINTMENT', 'QUEUE', 'SYSTEM') NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- -- 8. 操作記錄表（Extra Feature 用）
 -- CREATE TABLE audit_log
@@ -230,6 +228,7 @@ VALUES
 (1, 2, 1, '2026-04-21', '14:00:00', 'COMPLETED', NULL),
 
 -- 5. NO_SHOW (缺席): 代表病人未按時報到
+<<<<<<< HEAD
 (1, 1, 1, '2026-04-22', '16:30:00', 'NO_SHOW', NULL),
 (1, 1, 1, '2026-05-05', '09:30:00', 'CONFIRMED', NULL),
 (2, 1, 2, '2026-05-05', '10:00:00', 'PENDING', NULL),
@@ -241,3 +240,14 @@ VALUES
 (3, 1, 3, '2026-05-05', '16:00:00', 'NO_SHOW', NULL),
 (4, 1, 1, '2026-05-05', '16:30:00', 'CONFIRMED', NULL),
 (5, 2, 2, '2026-05-05', '17:00:00', 'PENDING', NULL);
+=======
+(1, 1, 1, '2026-04-22', '16:30:00', 'NO_SHOW', NULL);
+
+
+INSERT INTO timeslots (clinic_id, service_id, date, start_time, end_time, quota, booked) VALUES
+(1, 1, '2026-04-28', '09:00:00', '09:15:00', 10, 2),
+(1, 1, '2026-04-28', '09:15:00', '09:30:00', 10, 0),
+(1, 1, '2026-04-28', '10:00:00', '10:15:00', 10, 5),
+(1, 1, '2026-04-29', '09:00:00', '09:15:00', 10, 0),
+(1, 2, '2026-04-28', '14:00:00', '14:10:00', 8, 3);
+>>>>>>> 23f47f4951b1b572c515471246f6b6db5e85d91f

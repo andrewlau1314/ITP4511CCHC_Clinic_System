@@ -16,12 +16,12 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title><%= clinic.getName() %> - 服務與時段</title>
+    <title>選擇服務 - <%= clinic.getName() %></title>
     <style>
         body { font-family: Arial; background:#f4f7f6; margin:0; padding:20px; }
         .container { max-width:1000px; margin:auto; background:white; padding:30px; border-radius:10px; box-shadow:0 0 15px rgba(0,0,0,0.1); }
-        .service-card { border:1px solid #ddd; padding:15px; margin:10px 0; border-radius:8px; }
-        button { padding:12px 20px; background:#28a745; color:white; border:none; border-radius:5px; cursor:pointer; }
+        .service-card { border:1px solid #ddd; padding:20px; margin:15px 0; border-radius:10px; }
+        button { padding:12px 30px; background:#007bff; color:white; border:none; border-radius:8px; cursor:pointer; font-size:16px; }
     </style>
 </head>
 <body>
@@ -29,20 +29,22 @@
         <h2>🩺 <%= clinic.getName() %> - 選擇服務</h2>
         <p><strong>地址：</strong><%= clinic.getAddress() %></p>
 
-        <h3>可用服務</h3>
-        <% if (services != null && !services.isEmpty()) { 
-            for (ServiceBean s : services) { %>
-                <div class="service-card">
-                    <h4><%= s.getServiceName() %></h4>
-                    <p><%= s.getDescription() != null ? s.getDescription() : "" %></p>
-                    <a href="timeslots.do?clinicId=<%= clinic.getClinicId() %>&serviceId=<%= s.getServiceId() %>">
-                        <button>查看可預約時段 →</button>
-                    </a>
-                </div>
-        <%   } 
-           } else { %>
-            <p>此診所暫無開放服務。</p>
+        <% for (ServiceBean s : services) { %>
+            <div class="service-card">
+                <h3><%= s.getServiceName() %></h3>
+                <p><%= s.getDescription() %></p>
+                <form action="${pageContext.request.contextPath}/dateSelection.do" method="get" style="margin:0;">
+                    <input type="hidden" name="clinicId" value="<%= clinic.getClinicId() %>">
+                    <input type="hidden" name="serviceId" value="<%= s.getServiceId() %>">
+                    <button type="submit">選擇此服務 → 選擇日期</button>
+                </form>
+            </div>
         <% } %>
+
+        <br>
+        <a href="${pageContext.request.contextPath}/patient/clinics.do">
+            <button>← 返回診所列表</button>    
+        </a>
     </div>
 </body>
 </html>

@@ -1,6 +1,6 @@
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package com.cchc.controller.patient;
 
@@ -16,9 +16,12 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-
-@WebServlet(name = "AppointmentServlet", urlPatterns = {"/book.do"})
-public class AppointmentServlet extends HttpServlet {
+/**
+ *
+ * @author user
+ */
+@WebServlet(name = "RescheduleServlet", urlPatterns = {"/patient/reschedule.do"})
+public class RescheduleServlet extends HttpServlet {
 
     private AppointmentDB adb;
 
@@ -42,42 +45,30 @@ public class AppointmentServlet extends HttpServlet {
         }
 
         try {
-            int clinicId = Integer.parseInt(request.getParameter("clinicId"));
-            int serviceId = Integer.parseInt(request.getParameter("serviceId"));
-            LocalDate date = LocalDate.parse(request.getParameter("appointmentDate"));
-            LocalTime time = LocalTime.parse(request.getParameter("appointmentTime"));
-
-            // 新邏輯：檢查 CONFIRMED 是否已滿 10 人
-            int confirmedCount = adb.countConfirmedBookings(clinicId, date, time);
-
-            if (confirmedCount >= 10) {
-                request.setAttribute("error", "❌ 此時段已滿（最多 10 人），請選擇其他時間！");
-                request.getRequestDispatcher("/views/patient/timeSelection.jsp").forward(request, response);
-                return;
-            }
+            int appointmentId = Integer.parseInt(request.getParameter("appointmentId"));
+            LocalDate newDate = LocalDate.parse(request.getParameter("appointmentDate"));
+            LocalTime newTime = LocalTime.parse(request.getParameter("appointmentTime"));
 
             AppointmentBean ab = new AppointmentBean();
-            ab.setUserId(currentUser.getUserId());
-            ab.setClinicId(clinicId);
-            ab.setServiceId(serviceId);
-            ab.setAppointmentDate(date);
-            ab.setAppointmentTime(time);
+            ab.setAppointmentId(appointmentId);
+            ab.setAppointmentDate(newDate);
+            ab.setAppointmentTime(newTime);
 
-            boolean success = adb.addAppointment(ab);
+            // 使用 teammate 已經寫好的 update 方法
+            boolean success = adb.updateAppointmentDate(ab) && adb.updateAppointmentTime(ab);
 
             if (success) {
-                request.setAttribute("message", "🎉 預約成功！");
-                request.getRequestDispatcher("/views/patient/bookingSuccess.jsp").forward(request, response);
+                request.setAttribute("message", "✅ 預約已成功改期！ Appointment Date Changed");
             } else {
-                request.setAttribute("error", "❌ 預約失敗，請稍後再試！");
-                request.getRequestDispatcher("/views/patient/timeSelection.jsp").forward(request, response);
+                request.setAttribute("error", "❌ 改期失敗，請稍後再試！ Fail to Change Appointment Date");
             }
-
         } catch (Exception e) {
             e.printStackTrace();
-            request.setAttribute("error", "系統錯誤，請稍後再試！");
-            request.getRequestDispatcher("/views/patient/timeSelection.jsp").forward(request, response);
+            request.setAttribute("error", "系統錯誤，請稍後再試！ System Error");
         }
+
+        // 改期完成後跳回我的預約列表
+        response.sendRedirect(request.getContextPath() + "/patient/myBookings.do");
     }
 
     @Override

@@ -6,9 +6,12 @@
 
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="com.cchc.bean.ClinicBean" %>
+<%@ page import="com.cchc.bean.AppointmentBean" %>
+<%@ page import="java.util.ArrayList" %>
 <%
     ClinicBean clinic = (ClinicBean) request.getAttribute("clinic");
     Integer serviceId = (Integer) request.getAttribute("serviceId");
+    ArrayList<AppointmentBean> timeslots = (ArrayList<AppointmentBean>) request.getAttribute("timeslots");
 %>
 <!DOCTYPE html>
 <html>
@@ -21,6 +24,7 @@
         .timeslot-card { border:1px solid #ddd; padding:15px; margin:12px 0; border-radius:8px; display:flex; justify-content:space-between; align-items:center; }
         button { padding:12px 25px; background:#28a745; color:white; border:none; border-radius:5px; cursor:pointer; font-size:16px; }
         button:hover { background:#218838; }
+        .no-slot { color:#dc3545; font-size:18px; padding:20px; text-align:center; }
     </style>
 </head>
 <body>
@@ -28,41 +32,32 @@
         <h2>🩺 <%= clinic.getName() %> - 可預約時段</h2>
         <p><strong>地址：</strong><%= clinic.getAddress() %></p>
 
-        <h3>可預約時段</h3>
+        <h3>可用時段</h3>
 
-        <!-- 目前先顯示 placeholder，之後會接真實時段資料 -->
-        <div class="timeslot-card">
-            <div>
-                <strong>2026-04-28 (今天)</strong><br>
-                09:00 - 09:15
-            </div>
-            <div>
-                <button onclick="bookAppointment(<%= serviceId %>, '2026-04-28', '09:00:00')">立即預約</button>
-            </div>
-        </div>
+        <% if (timeslots != null && !timeslots.isEmpty()) { 
+            for (AppointmentBean ts : timeslots) { %>
+                <div class="timeslot-card">
+                    <div>
+                        <strong><%= ts.getAppointmentDate() %></strong><br>
+                        <%= ts.getAppointmentTime() %> 
+                    </div>
+                    <form action="${pageContext.request.contextPath}/book.do" method="post" style="margin:0;">
+                        <input type="hidden" name="clinicId" value="<%= clinic.getClinicId() %>">
+                        <input type="hidden" name="serviceId" value="<%= serviceId %>">
+                        <input type="hidden" name="appointmentDate" value="<%= ts.getAppointmentDate() %>">
+                        <input type="hidden" name="appointmentTime" value="<%= ts.getAppointmentTime() %>">
+                        <button type="submit">立即預約</button>
+                    </form>
+                </div>
+        <%   } 
+           } else { %>
+            <p class="no-slot">❌ 此服務目前沒有可預約時段</p>
+        <% } %>
 
-        <div class="timeslot-card">
-            <div>
-                <strong>2026-04-28 (今天)</strong><br>
-                09:15 - 09:30
-            </div>
-            <div>
-                <button onclick="bookAppointment(<%= serviceId %>, '2026-04-28', '09:15:00')">立即預約</button>
-            </div>
-        </div>
-
+        <br>
         <a href="${pageContext.request.contextPath}/patient/clinics.do">
             <button>← 返回診所列表</button>
         </a>
     </div>
-
-    <script>
-        function bookAppointment(serviceId, date, time) {
-            if (confirm("確定要預約 " + date + " " + time + " 嗎？")) {
-                window.location.href = "${pageContext.request.contextPath}/book.do?serviceId=" + serviceId + 
-                                       "&appointmentDate=" + date + "&appointmentTime=" + time;
-            }
-        }
-    </script>
 </body>
 </html>
