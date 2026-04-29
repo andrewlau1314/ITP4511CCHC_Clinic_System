@@ -44,10 +44,10 @@ public class JoinQueueServlet extends HttpServlet {
             return;
         }
 
-        // GET → 顯示加入排隊表單
+        // GET → 顯示表單
         if ("GET".equals(request.getMethod())) {
             ArrayList<ClinicBean> clinics = clinicDB.getClinics();
-            ArrayList<ServiceBean> services = serviceDB.queryServiceByClinicId(1);
+            ArrayList<ServiceBean> services = serviceDB.queryServiceByClinicId(1); // 可改成全部服務
 
             request.setAttribute("clinics", clinics);
             request.setAttribute("services", services);
@@ -56,19 +56,17 @@ public class JoinQueueServlet extends HttpServlet {
             return;
         }
 
-        // POST → 執行加入排隊
+              // POST 請求 → 執行加入排隊
         try {
             int clinicId = Integer.parseInt(request.getParameter("clinicId"));
             int serviceId = Integer.parseInt(request.getParameter("serviceId"));
 
-            boolean success = queueDB.joinQueue(currentUser.getUserId(), clinicId, serviceId);
+            String queueNumber = queueDB.joinQueue(currentUser.getUserId(), clinicId, serviceId);
 
-            if (success) {
-                // 設定必要屬性
+            if (queueNumber != null) {
                 request.setAttribute("message", "🎉 您已成功加入即日排隊！");
-                request.setAttribute("queueNumber", "Q" + (100 + (int)(Math.random()*900)));
-
-                request.getRequestDispatcher("/CCHC_Clinic_System/views/queue/queueStatus.jsp").forward(request, response);
+                request.setAttribute("queueNumber", queueNumber);   // 傳真實號碼
+                request.getRequestDispatcher("/views/queue/queueStatus.jsp").forward(request, response);
             } else {
                 request.setAttribute("error", "❌ 加入排隊失敗，請稍後再試！");
                 request.getRequestDispatcher("/views/queue/join.jsp").forward(request, response);

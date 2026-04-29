@@ -109,17 +109,16 @@ CREATE TABLE queues (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- -- 7. 通知表
--- CREATE TABLE notifications
--- (
---     notif_id   INT PRIMARY KEY AUTO_INCREMENT,
---     user_id    INT,
---     title      VARCHAR(100),
---     message    TEXT,
---     is_read    TINYINT  DEFAULT 0,
---     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
---     type       ENUM('APPOINTMENT','QUEUE','SYSTEM'),
---     FOREIGN KEY (user_id) REFERENCES users (user_id)
--- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE notifications (
+    notif_id    INT PRIMARY KEY AUTO_INCREMENT,
+    user_id     INT NOT NULL,
+    title       VARCHAR(100) NOT NULL,
+    message     TEXT,
+    is_read     TINYINT DEFAULT 0,
+    created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+    type        ENUM('APPOINTMENT', 'QUEUE', 'SYSTEM') NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- -- 8. 操作記錄表（Extra Feature 用）
 -- CREATE TABLE audit_log

@@ -29,19 +29,22 @@
         <p>歡迎，<%= currentUser.getFullName() %> (<%= currentUser.getRole() %>)</p>
     </div>
     
-   <div class="menu">
+    <h3>歡迎使用系統！</h3>
+        <p>你可以開始預約診症、查看排隊狀況，或管理個人資料。</p>
+   
+    <div class="menu">
     <a href="${pageContext.request.contextPath}/patient/clinics.do">📅 預約診症</a>
     <a href="${pageContext.request.contextPath}/patient/myBookings.do">📋 我的預約</a>
     <!-- doing -->
     <a href="${pageContext.request.contextPath}/queue/join.do">🚶 加入即日排隊 / Join Queue</a>
-    
+    <a href="${pageContext.request.contextPath}/patient/queueStatus.do">👀 查看排隊狀態</a>
+    <a href="${pageContext.request.contextPath}/patient/queueAllStatus.do">👀 各診所排隊狀態</a>
       <!-- Still not done -->
-    <a href="${pageContext.request.contextPath}/patient/notifications.jsp">🛎 我的通知</a>
+    <a href="${pageContext.request.contextPath}/patient/notifications.do">🛎 我的通知</a>
     <a href="${pageContext.request.contextPath}/logout.do">🚪 登出</a>
-</div>
-        
-        <h3>歡迎使用系統！</h3>
-        <p>你可以開始預約診症、查看排隊狀況，或管理個人資料。</p>
     </div>
+        
+        
+
 </body>
 </html>
