@@ -1,6 +1,8 @@
 package com.cchc.controller.admin;
 
 import com.cchc.DAO.AppointmentDB;
+import com.cchc.DAO.ClinicDB;
+import com.cchc.DAO.ServiceDB;
 import com.cchc.bean.AppointmentBean;
 import com.cchc.bean.UserBean;
 import java.io.IOException;
@@ -26,7 +28,7 @@ public class ReportServlet extends HttpServlet {
         adb = new AppointmentDB(dbUrl, dbUser, dbPassword);
     }
 
-        protected void processRequest(HttpServletRequest request, HttpServletResponse response)
+            protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
         HttpSession session = request.getSession();
@@ -43,14 +45,11 @@ public class ReportServlet extends HttpServlet {
         String monthYear = request.getParameter("monthYear");
         String status = request.getParameter("status");
 
-        String clinicStr = request.getParameter("clinicId");
-        if (clinicStr != null && !clinicStr.isEmpty()) {
-            clinicId = Integer.parseInt(clinicStr);
+        if (request.getParameter("clinicId") != null && !request.getParameter("clinicId").isEmpty()) {
+            clinicId = Integer.parseInt(request.getParameter("clinicId"));
         }
-
-        String serviceStr = request.getParameter("serviceId");
-        if (serviceStr != null && !serviceStr.isEmpty()) {
-            serviceId = Integer.parseInt(serviceStr);
+        if (request.getParameter("serviceId") != null && !request.getParameter("serviceId").isEmpty()) {
+            serviceId = Integer.parseInt(request.getParameter("serviceId"));
         }
 
         // 取得資料
@@ -64,7 +63,19 @@ public class ReportServlet extends HttpServlet {
 
         ArrayList<Map<String, Object>> clinicStats = adb.getBookingsByClinic();
 
-        // 傳給 JSP
+        // 傳給 JSP（讓下拉選單有資料）
+        request.setAttribute("clinics", new ClinicDB(
+            this.getServletContext().getInitParameter("dbUrl"),
+            this.getServletContext().getInitParameter("dbUser"),
+            this.getServletContext().getInitParameter("dbPassword")
+        ).getClinics());
+
+        request.setAttribute("services", new ServiceDB(
+            this.getServletContext().getInitParameter("dbUrl"),
+            this.getServletContext().getInitParameter("dbUser"),
+            this.getServletContext().getInitParameter("dbPassword")
+        ).getAllServices());
+
         request.setAttribute("appointments", appointments);
         request.setAttribute("totalBookings", totalBookings);
         request.setAttribute("pendingBookings", pendingBookings);

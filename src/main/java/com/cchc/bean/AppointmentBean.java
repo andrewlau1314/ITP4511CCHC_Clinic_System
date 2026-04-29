@@ -134,4 +134,6 @@ public class AppointmentBean implements Serializable {
     public void setPatientName(String patientName) {
         this.patientName = patientName;
     }
+    
+    
 }

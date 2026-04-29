@@ -455,16 +455,19 @@ public class AppointmentDB {
 
     public String getPatientName() { return patientName; }
     public void setPatientName(String patientName) { this.patientName = patientName; }
-            // ==================== 管理員報表：依條件查詢預約（顯示名稱） ====================
+
+    
+      // ==================== 管理員報表：依條件查詢預約（顯示名稱） ====================
     public ArrayList<AppointmentBean> getAppointmentsWithFilter(Integer clinicId, Integer serviceId, 
                                                                 String monthYear, String status) {
         ArrayList<AppointmentBean> list = new ArrayList<>();
         
         StringBuilder sql = new StringBuilder(
-            "SELECT a.*, c.name as clinic_name, u.full_name as patient_name " +
+            "SELECT a.*, c.name as clinic_name, u.full_name as patient_name, s.service_name " +
             "FROM appointments a " +
             "LEFT JOIN clinics c ON a.clinic_id = c.clinic_id " +
             "LEFT JOIN users u ON a.user_id = u.user_id " +
+            "LEFT JOIN services s ON a.service_id = s.service_id " +
             "WHERE a.is_deleted = 0"
         );
 
@@ -496,9 +499,10 @@ public class AppointmentDB {
                     ab.setStatus(rs.getString("status"));
                     ab.setCancelReason(rs.getString("cancel_reason"));
 
-                    // 新增名稱
+                    // 名稱欄位
                     ab.setClinicName(rs.getString("clinic_name"));
                     ab.setPatientName(rs.getString("patient_name"));
+                    ab.setServiceName(rs.getString("service_name"));   // ← 新增
 
                     list.add(ab);
                 }
@@ -507,5 +511,36 @@ public class AppointmentDB {
             e.printStackTrace();
         }
         return list;
+    }
+    
+    
+        // ==================== 更新預約日期 ====================
+    public boolean updateAppointmentDate(AppointmentBean ab) {
+        String sql = "UPDATE appointments SET appointment_date = ? WHERE appointment_id = ?";
+        try (Connection conn = DBConnection.getConnection(dbUrl, dbUser, dbPassword);
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setDate(1, java.sql.Date.valueOf(ab.getAppointmentDate()));
+            ps.setInt(2, ab.getAppointmentId());
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // ==================== 更新預約時間 ====================
+    public boolean updateAppointmentTime(AppointmentBean ab) {
+        String sql = "UPDATE appointments SET appointment_time = ? WHERE appointment_id = ?";
+        try (Connection conn = DBConnection.getConnection(dbUrl, dbUser, dbPassword);
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setTime(1, java.sql.Time.valueOf(ab.getAppointmentTime()));
+            ps.setInt(2, ab.getAppointmentId());
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }
