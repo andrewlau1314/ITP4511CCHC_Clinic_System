@@ -21,7 +21,8 @@
 <body>
     <div class="login-box">
         <h2 style="text-align:center; color:#007bff;">🩺 CCHC 社區診所系統</h2>
-        <h3 style="text-align:center;">登入</h3>
+        <h2 style="text-align:center; color:#007bff;">🩺 CCHC clinics System</h2>
+        <h3 style="text-align:center;">Login</h3>
         
         <% if (request.getAttribute("error") != null) { %>
             <p class="error"><%= request.getAttribute("error") %></p>
@@ -30,14 +31,14 @@
         <form action="login.do" method="post">
             <input type="text" name="username" placeholder="用戶名稱" required autofocus />
             <input type="password" name="password" placeholder="密碼" required />
-            <button type="submit">登入</button>
+            <button type="submit">Login</button>
         </form>
         
         <p style="text-align:center; margin-top:15px; font-size:14px;">
             測試帳號：<br>
-            admin / 123456 (管理員)<br>
-            staff1 / 123456 (職員)<br>
-            patient1 / 123456 (病人)
+            admin/ 123456 (管理員)<br>
+            staff1/ 123456 (職員)<br>
+            patient1/ 123456 (病人)
         </p>
     </div>
 </body>
