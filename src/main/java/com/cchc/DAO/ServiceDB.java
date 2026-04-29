@@ -50,8 +50,21 @@ public class ServiceDB {
         }
         return sbs;
     }
-    
-    
-    
-    
+
+    public int getServiceQuota(int clinicId, int serviceId) {
+        String sql = "SELECT quota FROM clinics_services WHERE clinic_id = ? AND service_id = ?";
+        try (Connection conn = DBConnection.getConnection(dbUrl, dbUser, dbPassword); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, clinicId);
+            ps.setInt(2, serviceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("quota");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
 }
