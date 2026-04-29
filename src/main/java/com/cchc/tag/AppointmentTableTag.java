@@ -8,7 +8,6 @@ package com.cchc.tag;
  *
  * @author firetruck
  */
-
 import com.cchc.bean.AppointmentBean;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -52,10 +51,11 @@ public class AppointmentTableTag extends SimpleTagSupport {
                 out.println("<td style='color: #666; font-size: 0.9em;'>" + reason + "</td>");
 
                 out.println("<td style='text-align: center;'>");
-                out.println("  <a href='edit_appointment.jsp?id=" + ab.getAppointmentId() + "' style='color: #007bff; text-decoration: none;'>Edit</a> | ");
-                out.println("  <a href='UpdateStatusServlet?id=" + ab.getAppointmentId() + "&status=CANCELLED' ");
+                out.println("  <a href='EditAppServlet?id=" + ab.getAppointmentId() + "' style='color: #007bff; text-decoration: none;'>Edit</a> | ");
+                out.println("  <a href='DeleteAppointmentServlet?id=" + ab.getAppointmentId() + "' ");
                 out.println("     style='color: red; text-decoration: none;' ");
-                out.println("     onclick=\"return confirm('Are you sure you want to cancel this appointment?')\">Cancel</a>");
+                out.println("     onclick=\"return confirm('Are you sure you want to delete this appointment? This cannot be undone.')\">Delete</a>");
+
                 out.println("</td>");
 
                 out.println("</tr>");
