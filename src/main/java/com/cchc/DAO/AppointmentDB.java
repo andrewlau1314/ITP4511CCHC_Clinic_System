@@ -27,186 +27,87 @@ public class AppointmentDB {
     }
 
 //================Get Appointment====================
-    public ArrayList<AppointmentBean> queryAppointments() {
+    public ArrayList<AppointmentBean> queryAppointments(AppointmentBean ab) {
         ArrayList<AppointmentBean> abs = new ArrayList<>();
-        AppointmentBean ab = null;
 
-        String sql = "SELECT * FROM appointments AND is_deleted = 0";
-        try (Connection conn = DBConnection.getConnection(dbUrl, dbUser, dbPassword); Statement st = conn.createStatement(); ResultSet rs = st.executeQuery(sql)) {
+        StringBuilder sql = new StringBuilder(
+                "SELECT a.*, u.full_name, s.service_name FROM appointments a "
+                + "JOIN users u ON a.user_id = u.user_id "
+                + "JOIN services s ON a.service_id = s.service_id "
+                + "WHERE a.is_deleted = 0"
+        );
 
-            while (rs.next()) {
-                ab = new AppointmentBean();
-                ab.setAppointmentId(rs.getInt("appointment_id"));
-                ab.setUserId(rs.getInt("user_id"));
-                ab.setClinicId(rs.getInt("clinic_id"));
-                ab.setServiceId(rs.getInt("service_id"));
-                ab.setAppointmentDate(rs.getDate("appointment_date").toLocalDate());
-                ab.setAppointmentTime(rs.getTime("appointment_time").toLocalTime());
-                ab.setStatus(rs.getString("status"));
-                ab.setCancelReason(rs.getString("cancel_reason"));
-                ab.setCreatedAt(rs.getObject("created_at", LocalDateTime.class));
-                abs.add(ab);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        if (ab.getClinicId() != 0) {
+            sql.append(" AND a.clinic_id = ?");
         }
-        return abs;
-    }
+        if (ab.getAppointmentId() != 0) {
+            sql.append(" AND a.appointment_id = ?");
+        }
+        if (ab.getUserId() != 0) {
+            sql.append(" AND a.user_id = ?");
+        }
+        if (ab.getFullName() != null && !ab.getFullName().isEmpty()) {
+            sql.append(" AND u.full_name = ?");
+        }
+        if (ab.getServiceId() != 0) {
+            sql.append(" AND a.service_id = ?");
+        }
+        if (ab.getAppointmentDate() != null) {
+            sql.append(" AND a.appointment_date = ?");
+        }
+        if (ab.getStatus() != null && !ab.getStatus().isEmpty()) {
+            sql.append(" AND a.status = ?");
+        }
 
-    public ArrayList<AppointmentBean> queryAppointmentByClinicId(int clinicId) {
-        ArrayList<AppointmentBean> abs = new ArrayList<>();
-        AppointmentBean ab = null;
-        String sql = "SELECT * FROM appointments WHERE clinic_id = ? AND is_deleted = 0";
+        try (Connection conn = DBConnection.getConnection(dbUrl, dbUser, dbPassword); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
 
-        try (Connection conn = DBConnection.getConnection(dbUrl, dbUser, dbPassword); PreparedStatement ps = conn.prepareStatement(sql)) {
+            int paramIndex = 1;
 
-            ps.setInt(1, clinicId);
+            if (ab.getClinicId() != 0) {
+                ps.setInt(paramIndex++, ab.getClinicId());
+            }
+            if (ab.getAppointmentId() != 0) {
+                ps.setInt(paramIndex++, ab.getAppointmentId());
+            }
+            if (ab.getUserId() != 0) {
+                ps.setInt(paramIndex++, ab.getUserId());
+            }
+            if (ab.getFullName() != null && !ab.getFullName().isEmpty()) {
+                ps.setString(paramIndex++, ab.getFullName());
+            }
+            if (ab.getServiceId() != 0) {
+                ps.setInt(paramIndex++, ab.getServiceId());
+            }
+            if (ab.getAppointmentDate() != null) {
+                ps.setDate(paramIndex++, java.sql.Date.valueOf(ab.getAppointmentDate()));
+            }
+            if (ab.getStatus() != null && !ab.getStatus().isEmpty()) {
+                ps.setString(paramIndex++, ab.getStatus());
+            }
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    ab = new AppointmentBean();
-                    ab.setAppointmentId(rs.getInt("appointment_id"));
-                    ab.setUserId(rs.getInt("user_id"));
-                    ab.setClinicId(rs.getInt("clinic_id"));
-                    ab.setServiceId(rs.getInt("service_id"));
-                    ab.setAppointmentDate(rs.getDate("appointment_date").toLocalDate());
-                    ab.setAppointmentTime(rs.getTime("appointment_time").toLocalTime());
-                    ab.setStatus(rs.getString("status"));
-                    ab.setCancelReason(rs.getString("cancel_reason"));
-                    ab.setCreatedAt(rs.getObject("created_at", LocalDateTime.class));
-                    abs.add(ab);
+                    //AppointmentBean result 
+                    AppointmentBean abrs = new AppointmentBean();
+                    
+                    abrs.setAppointmentId(rs.getInt("appointment_id"));
+                    abrs.setUserId(rs.getInt("user_id"));
+                    abrs.setClinicId(rs.getInt("clinic_id"));
+                    abrs.setServiceId(rs.getInt("service_id"));
+                    abrs.setAppointmentDate(rs.getDate("appointment_date").toLocalDate());
+                    abrs.setAppointmentTime(rs.getTime("appointment_time").toLocalTime());
+                    abrs.setStatus(rs.getString("status"));
+                    abrs.setCancelReason(rs.getString("cancel_reason"));
+                    abrs.setCreatedAt(rs.getObject("created_at", LocalDateTime.class));
+                    abrs.setFullName(rs.getString("full_name"));
+                    abrs.setServiceName(rs.getString("service_name"));
+                    
+                    abs.add(abrs);
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
-        return abs;
-    }
-
-    public AppointmentBean queryAppointmentById(int appointmentId, int clinicId) {
-        AppointmentBean ab = null;
-        String sql = "SELECT * FROM appointments WHERE appointment_id = ? AND clinic_id = ? AND is_deleted = 0";
-
-        try (Connection conn = DBConnection.getConnection(dbUrl, dbUser, dbPassword); PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setInt(1, appointmentId);
-            ps.setInt(2, clinicId);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    ab = new AppointmentBean();
-                    ab.setAppointmentId(rs.getInt("appointment_id"));
-                    ab.setUserId(rs.getInt("user_id"));
-                    ab.setClinicId(rs.getInt("clinic_id"));
-                    ab.setServiceId(rs.getInt("service_id"));
-                    ab.setAppointmentDate(rs.getDate("appointment_date").toLocalDate());
-                    ab.setAppointmentTime(rs.getTime("appointment_time").toLocalTime());
-                    ab.setStatus(rs.getString("status"));
-                    ab.setCancelReason(rs.getString("cancel_reason"));
-                    ab.setCreatedAt(rs.getObject("created_at", LocalDateTime.class));
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return ab;
-    }
-
-    public ArrayList<AppointmentBean> queryAppointmentByUserId(int userId, int clinicId) {
-        ArrayList<AppointmentBean> abs = new ArrayList<>();
-        AppointmentBean ab = null;
-        String sql = "SELECT * FROM appointments WHERE clinic_id = ? AND user_id = ? AND is_deleted = 0";
-
-        try (Connection conn = DBConnection.getConnection(dbUrl, dbUser, dbPassword); PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setInt(1, clinicId);
-            ps.setInt(1, userId);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    ab = new AppointmentBean();
-                    ab.setAppointmentId(rs.getInt("appointment_id"));
-                    ab.setUserId(rs.getInt("user_id"));
-                    ab.setClinicId(rs.getInt("clinic_id"));
-                    ab.setServiceId(rs.getInt("service_id"));
-                    ab.setAppointmentDate(rs.getDate("appointment_date").toLocalDate());
-                    ab.setAppointmentTime(rs.getTime("appointment_time").toLocalTime());
-                    ab.setStatus(rs.getString("status"));
-                    ab.setCancelReason(rs.getString("cancel_reason"));
-                    ab.setCreatedAt(rs.getObject("created_at", LocalDateTime.class));
-                    abs.add(ab);
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return abs;
-    }
-
-    public ArrayList<AppointmentBean> queryAppointmentByDate(LocalDate appointmentDate, int clinicId) {
-        ArrayList<AppointmentBean> abs = new ArrayList<>();
-        AppointmentBean ab = null;
-        String sql = "SELECT * FROM appointments WHERE clinic_id = ? AND appointment_date = ? AND is_deleted = 0";
-
-        try (Connection conn = DBConnection.getConnection(dbUrl, dbUser, dbPassword); PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setInt(1, clinicId);
-            ps.setDate(2, java.sql.Date.valueOf(appointmentDate));
-
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    ab = new AppointmentBean();
-                    ab.setAppointmentId(rs.getInt("appointment_id"));
-                    ab.setUserId(rs.getInt("user_id"));
-                    ab.setClinicId(rs.getInt("clinic_id"));
-                    ab.setServiceId(rs.getInt("service_id"));
-                    ab.setAppointmentDate(rs.getDate("appointment_date").toLocalDate());
-                    ab.setAppointmentTime(rs.getTime("appointment_time").toLocalTime());
-                    ab.setStatus(rs.getString("status"));
-                    ab.setCancelReason(rs.getString("cancel_reason"));
-                    ab.setCreatedAt(rs.getObject("created_at", LocalDateTime.class));
-                    abs.add(ab);
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return abs;
-    }
-
-    public ArrayList<AppointmentBean> queryAppointmentByStatus(String status, int clinicId) {
-        ArrayList<AppointmentBean> abs = new ArrayList<>();
-        AppointmentBean ab = null;
-        String sql = "SELECT * FROM appointments WHERE clinic_id = ? AND status = ? AND is_deleted = 0";
-
-        try (Connection conn = DBConnection.getConnection(dbUrl, dbUser, dbPassword); PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setInt(1, clinicId);
-            ps.setString(2, status);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    ab = new AppointmentBean();
-                    ab.setAppointmentId(rs.getInt("appointment_id"));
-                    ab.setUserId(rs.getInt("user_id"));
-                    ab.setClinicId(rs.getInt("clinic_id"));
-                    ab.setServiceId(rs.getInt("service_id"));
-                    ab.setAppointmentDate(rs.getDate("appointment_date").toLocalDate());
-                    ab.setAppointmentTime(rs.getTime("appointment_time").toLocalTime());
-                    ab.setStatus(rs.getString("status"));
-                    ab.setCancelReason(rs.getString("cancel_reason"));
-                    ab.setCreatedAt(rs.getObject("created_at", LocalDateTime.class));
-                    abs.add(ab);
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
         return abs;
     }
 
@@ -316,4 +217,127 @@ public class AppointmentDB {
     }
 
 //================delete====================
+
+
+// ==================== 取得某診所 + 某服務的可用時段 Get Clinic and check this Clininc what time can be booking====================
+    public ArrayList<AppointmentBean> getAvailableTimeslots(int clinicId, int serviceId) {
+        ArrayList<AppointmentBean> list = new ArrayList<>();
+        String sql = "SELECT * FROM timeslots WHERE clinic_id = ? AND service_id = ? AND booked < quota ORDER BY date, start_time";
+
+        try (Connection conn = DBConnection.getConnection(dbUrl, dbUser, dbPassword);
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, clinicId);
+            ps.setInt(2, serviceId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    AppointmentBean ab = new AppointmentBean();
+                    ab.setAppointmentId(rs.getInt("timeslot_id"));   // 借用 appointment_id 欄位存 timeslot_id
+                    ab.setClinicId(rs.getInt("clinic_id"));
+                    ab.setServiceId(rs.getInt("service_id"));
+                    ab.setAppointmentDate(rs.getDate("date").toLocalDate());
+                    ab.setAppointmentTime(rs.getTime("start_time").toLocalTime());
+                    // 可自行加入 end_time 如果 Bean 有這個欄位
+                    list.add(ab);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+    
+    // ==================== 新邏輯：檢查該時段已確認預約數量 ====================
+    public int countConfirmedBookings(int clinicId, java.time.LocalDate date, java.time.LocalTime time) {
+        String sql = "SELECT COUNT(*) FROM appointments " +
+                     "WHERE clinic_id = ? AND appointment_date = ? " +
+                     "AND appointment_time = ? AND status = 'CONFIRMED' AND is_deleted = 0";
+
+        try (Connection conn = DBConnection.getConnection(dbUrl, dbUser, dbPassword);
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, clinicId);
+            ps.setDate(2, java.sql.Date.valueOf(date));
+            ps.setTime(3, java.sql.Time.valueOf(time));
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    // ==================== 新邏輯：取得某日期的所有可能時間段（可自訂） ====================
+    public ArrayList<String> getAvailableTimesForDate(int clinicId, int serviceId, java.time.LocalDate date) {
+        ArrayList<String> times = new ArrayList<>();
+        // 這裡先用固定時段（可之後改成從資料庫讀取）
+        String[] possibleTimes = {"09:00:00", "09:30:00", "10:00:00", "10:30:00", "11:00:00", 
+                                  "14:00:00", "14:30:00", "15:00:00", "15:30:00"};
+
+        for (String t : possibleTimes) {
+            java.time.LocalTime time = java.time.LocalTime.parse(t);
+            int count = countConfirmedBookings(clinicId, date, time);
+            if (count < 10) {
+                times.add(t);
+            }
+        }
+        return times;
+    }
+
+    // ==================== 查詢某用戶的所有預約 Check User Appointment====================
+    public ArrayList<AppointmentBean> queryAppointmentsByUser(int userId) {
+        ArrayList<AppointmentBean> list = new ArrayList<>();
+        String sql = "SELECT a.*, c.name as clinic_name, s.service_name " +
+                     "FROM appointments a " +
+                     "JOIN clinics c ON a.clinic_id = c.clinic_id " +
+                     "JOIN services s ON a.service_id = s.service_id " +
+                     "WHERE a.user_id = ? AND a.is_deleted = 0 " +
+                     "ORDER BY a.appointment_date DESC, a.appointment_time DESC";
+
+        try (Connection conn = DBConnection.getConnection(dbUrl, dbUser, dbPassword);
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, userId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    AppointmentBean ab = new AppointmentBean();
+                    ab.setAppointmentId(rs.getInt("appointment_id"));
+                    ab.setClinicId(rs.getInt("clinic_id"));
+                    ab.setServiceId(rs.getInt("service_id"));
+                    ab.setAppointmentDate(rs.getDate("appointment_date").toLocalDate());
+                    ab.setAppointmentTime(rs.getTime("appointment_time").toLocalTime());
+                    ab.setStatus(rs.getString("status"));
+                    ab.setCancelReason(rs.getString("cancel_reason"));
+                    // 可自行加入 clinicName 和 serviceName 如果你的 Bean 有這些欄位
+                    list.add(ab);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    // ==================== 取消預約 Cancel Appointment by UserSide====================
+    public boolean cancelAppointment(int appointmentId, int userId) {
+        String sql = "UPDATE appointments SET status = 'CANCELLED', cancel_reason = '用戶自行取消' " +
+                     "WHERE appointment_id = ? AND user_id = ? AND status = 'PENDING' AND is_deleted = 0";
+        
+        try (Connection conn = DBConnection.getConnection(dbUrl, dbUser, dbPassword);
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, appointmentId);
+            ps.setInt(2, userId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }

@@ -36,13 +36,17 @@
                     <p><strong>地址：</strong><%= c.getAddress() != null ? c.getAddress() : "" %></p>
                     <p><strong>電話：</strong><%= c.getPhone() != null ? c.getPhone() : "" %></p>
                     <a href="${pageContext.request.contextPath}/services.do?clinicId=<%= c.getClinicId() %>">
-                        <button>查看服務與可預約時段 →</button>
+                        <button>Check available Time 查看服務與可預約時段 →</button>
                     </a>
                 </div>
         <%   } 
            } else { %>
             <p style="color:red;">目前沒有診所資料，請聯絡管理員。</p>
         <% } %>
+        <a href="${pageContext.request.contextPath}/views/patient/dashboard.jsp"> 
+            <button>Go Back</button>
+        </a>
+       
     </div>
 </body>
 </html>

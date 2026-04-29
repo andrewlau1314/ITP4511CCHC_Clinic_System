@@ -29,14 +29,14 @@
         <p>歡迎，<%= currentUser.getFullName() %> (<%= currentUser.getRole() %>)</p>
     </div>
     
-    <div class="container">
-        <div class="menu">
-            <a href="${pageContext.request.contextPath}/patient/clinics.do">📅 預約診症</a>
-            <a href="../appointment/myBookings.jsp">📋 我的預約</a>
-            <a href="../queue/join.jsp">🚶 加入即日排隊</a>
-            <a href="../patient/notifications.jsp">🛎 我的通知</a>
-            <a href="../../logout.do">🚪 登出</a>
-        </div>
+   <div class="menu">
+    <a href="${pageContext.request.contextPath}/patient/clinics.do">📅 預約診症</a>
+    <a href="${pageContext.request.contextPath}/patient/myBookings.do">📋 我的預約</a>
+    <!-- Still not done -->
+    <a href="${pageContext.request.contextPath}/queue/join.jsp">🚶 加入即日排隊</a>
+    <a href="${pageContext.request.contextPath}/patient/notifications.jsp">🛎 我的通知</a>
+    <a href="${pageContext.request.contextPath}/logout.do">🚪 登出</a>
+</div>
         
         <h3>歡迎使用系統！</h3>
         <p>你可以開始預約診症、查看排隊狀況，或管理個人資料。</p>
