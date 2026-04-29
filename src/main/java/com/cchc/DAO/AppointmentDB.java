@@ -13,6 +13,7 @@ import com.cchc.util.DBConnection;
 import java.sql.*;
 import java.time.*;
 import java.util.ArrayList;
+import java.util.Map;
 
 public class AppointmentDB {
 
@@ -340,4 +341,66 @@ public class AppointmentDB {
             return false;
         }
     }
+    
+        // ==================== 報表用：總預約數 ====================
+    public int getTotalBookings() {
+        String sql = "SELECT COUNT(*) FROM appointments WHERE is_deleted = 0";
+        try (Connection conn = DBConnection.getConnection(dbUrl, dbUser, dbPassword);
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) return rs.getInt(1);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    // ==================== 報表用：依狀態統計 ====================
+    public int getBookingsByStatus(String status) {
+        String sql = "SELECT COUNT(*) FROM appointments WHERE status = ? AND is_deleted = 0";
+        try (Connection conn = DBConnection.getConnection(dbUrl, dbUser, dbPassword);
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, status);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+    
+        // ==================== 每月預約統計 ====================
+    public Map<String, Integer> getMonthlyBookings() {
+        // 簡化版：最近6個月統計
+        // 你可以之後再擴充成更完整的
+        return new java.util.HashMap<>(); // 先留空，之後再實作詳細版
+    }
+
+    // ==================== 各診所預約統計 ====================
+    public ArrayList<Map<String, Object>> getBookingsByClinic() {
+        ArrayList<Map<String, Object>> list = new ArrayList<>();
+        String sql = "SELECT c.name as clinic_name, COUNT(a.appointment_id) as total, " +
+                     "SUM(CASE WHEN a.status = 'CONFIRMED' THEN 1 ELSE 0 END) as confirmed " +
+                     "FROM clinics c LEFT JOIN appointments a ON c.clinic_id = a.clinic_id " +
+                     "WHERE a.is_deleted = 0 GROUP BY c.clinic_id, c.name ORDER BY total DESC";
+
+        try (Connection conn = DBConnection.getConnection(dbUrl, dbUser, dbPassword);
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                Map<String, Object> map = new java.util.HashMap<>();
+                map.put("clinicName", rs.getString("clinic_name"));
+                map.put("total", rs.getInt("total"));
+                map.put("confirmed", rs.getInt("confirmed"));
+                list.add(map);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
 }
