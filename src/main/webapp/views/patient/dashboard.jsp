@@ -32,8 +32,10 @@
    <div class="menu">
     <a href="${pageContext.request.contextPath}/patient/clinics.do">📅 預約診症</a>
     <a href="${pageContext.request.contextPath}/patient/myBookings.do">📋 我的預約</a>
-    <!-- Still not done -->
-    <a href="${pageContext.request.contextPath}/queue/join.jsp">🚶 加入即日排隊</a>
+    <!-- doing -->
+    <a href="${pageContext.request.contextPath}/queue/join.do">🚶 加入即日排隊 / Join Queue</a>
+    
+      <!-- Still not done -->
     <a href="${pageContext.request.contextPath}/patient/notifications.jsp">🛎 我的通知</a>
     <a href="${pageContext.request.contextPath}/logout.do">🚪 登出</a>
 </div>

@@ -93,21 +93,20 @@ CREATE TABLE timeslots
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 6. 排隊表
--- CREATE TABLE queues
--- (
---     queue_id           INT PRIMARY KEY AUTO_INCREMENT,
---     user_id            INT,
---     clinic_id          INT,
---     service_id         INT,
---     date               DATE NOT NULL,
---     queue_number       VARCHAR(10),
---     status             ENUM('WAITING','CALLED','SKIPPED','COMPLETED','EXPIRED') DEFAULT 'WAITING',
---     estimated_wait_min INT,
---     joined_at          DATETIME DEFAULT CURRENT_TIMESTAMP,
---     FOREIGN KEY (user_id) REFERENCES users (user_id),
---     FOREIGN KEY (clinic_id) REFERENCES clinics (clinic_id),
---     FOREIGN KEY (service_id) REFERENCES services (service_id)
--- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE queues (
+    queue_id           INT PRIMARY KEY AUTO_INCREMENT,
+    user_id            INT,
+    clinic_id          INT,
+    service_id         INT,
+    date               DATE NOT NULL,
+    queue_number       VARCHAR(10),
+    status             ENUM('WAITING','CALLED','SKIPPED','COMPLETED','EXPIRED') DEFAULT 'WAITING',
+    estimated_wait_min INT,
+    joined_at          DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users (user_id),
+    FOREIGN KEY (clinic_id) REFERENCES clinics (clinic_id),
+    FOREIGN KEY (service_id) REFERENCES services (service_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- -- 7. 通知表
 -- CREATE TABLE notifications
