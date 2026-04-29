@@ -13,6 +13,7 @@ import com.cchc.util.DBConnection;
 import java.sql.*;
 import java.util.ArrayList;
 
+
 public class ServiceDB {
 
     private String dbUrl = "";
@@ -72,7 +73,7 @@ public class ServiceDB {
         }
         return list;
     }
-<<<<<<< HEAD
+
 
     public int getServiceQuota(int clinicId, int serviceId) {
         String sql = "SELECT quota FROM clinics_services WHERE clinic_id = ? AND service_id = ?";
@@ -82,7 +83,13 @@ public class ServiceDB {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return rs.getInt("quota");
-=======
+                }
+            }
+        }catch (SQLException e) {
+            e.printStackTrace();
+        }        
+        return 0;
+    }
     
         // ==================== 管理員用：新增服務 ====================
     public boolean addService(ServiceBean sb) {
@@ -116,17 +123,11 @@ public class ServiceDB {
                     sb.setServiceId(rs.getInt("service_id"));
                     sb.setServiceName(rs.getString("service_name"));
                     sb.setDescription(rs.getString("description"));
->>>>>>> 23f47f4951b1b572c515471246f6b6db5e85d91f
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-<<<<<<< HEAD
-        return 0;
-    }
-
-=======
         return sb;
     }
     
@@ -178,5 +179,4 @@ public class ServiceDB {
             return false;
         }
     }
->>>>>>> 23f47f4951b1b572c515471246f6b6db5e85d91f
 }
