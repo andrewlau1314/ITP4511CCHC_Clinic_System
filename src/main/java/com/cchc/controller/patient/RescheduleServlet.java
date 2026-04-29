@@ -33,7 +33,7 @@ public class RescheduleServlet extends HttpServlet {
         adb = new AppointmentDB(dbUrl, dbUser, dbPassword);
     }
 
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
+      protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
         HttpSession session = request.getSession();
@@ -44,31 +44,47 @@ public class RescheduleServlet extends HttpServlet {
             return;
         }
 
-        try {
-            int appointmentId = Integer.parseInt(request.getParameter("appointmentId"));
-            LocalDate newDate = LocalDate.parse(request.getParameter("appointmentDate"));
-            LocalTime newTime = LocalTime.parse(request.getParameter("appointmentTime"));
+        if ("GET".equals(request.getMethod())) {
+            // 顯示改期表單
+            try {
+                int appointmentId = Integer.parseInt(request.getParameter("appointmentId"));
+                AppointmentBean ab = adb.getAppointmentById(appointmentId);   // 需要這個方法
 
-            AppointmentBean ab = new AppointmentBean();
-            ab.setAppointmentId(appointmentId);
-            ab.setAppointmentDate(newDate);
-            ab.setAppointmentTime(newTime);
-
-            // 使用 teammate 已經寫好的 update 方法
-            boolean success = adb.updateAppointmentDate(ab) && adb.updateAppointmentTime(ab);
-
-            if (success) {
-                request.setAttribute("message", "✅ 預約已成功改期！ Appointment Date Changed");
-            } else {
-                request.setAttribute("error", "❌ 改期失敗，請稍後再試！ Fail to Change Appointment Date");
+                if (ab != null && ab.getUserId() == currentUser.getUserId()) {
+                    request.setAttribute("appointment", ab);
+                    request.getRequestDispatcher("/views/patient/reschedule.jsp").forward(request, response);
+                } else {
+                    response.sendRedirect(request.getContextPath() + "/patient/myBookings.do");
+                }
+            } catch (Exception e) {
+                response.sendRedirect(request.getContextPath() + "/patient/myBookings.do");
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            request.setAttribute("error", "系統錯誤，請稍後再試！ System Error");
-        }
+        } else {
+            // POST：執行改期
+            try {
+                int appointmentId = Integer.parseInt(request.getParameter("appointmentId"));
+                LocalDate newDate = LocalDate.parse(request.getParameter("appointmentDate"));
+                LocalTime newTime = LocalTime.parse(request.getParameter("appointmentTime"));
 
-        // 改期完成後跳回我的預約列表
-        response.sendRedirect(request.getContextPath() + "/patient/myBookings.do");
+                AppointmentBean ab = new AppointmentBean();
+                ab.setAppointmentId(appointmentId);
+                ab.setAppointmentDate(newDate);
+                ab.setAppointmentTime(newTime);
+
+                boolean success = adb.updateAppointmentDate(ab) && adb.updateAppointmentTime(ab);
+
+                if (success) {
+                    response.sendRedirect(request.getContextPath() + "/patient/myBookings.do");
+                } else {
+                    request.setAttribute("error", "❌ 改期失敗！");
+                    request.getRequestDispatcher("/views/patient/reschedule.jsp").forward(request, response);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                request.setAttribute("error", "❌ 系統錯誤！");
+                request.getRequestDispatcher("/views/patient/reschedule.jsp").forward(request, response);
+            }
+        }
     }
 
     @Override

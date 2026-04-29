@@ -98,18 +98,11 @@
                     </td>
                     <td>
                         <% if ("PENDING".equals(ab.getStatus())) { %>
-                            <form action="${pageContext.request.contextPath}/patient/cancel.do" method="post" style="display:inline;">
-                                <input type="hidden" name="appointmentId" value="<%= ab.getAppointmentId() %>">
-                                <button type="submit" class="cancel-btn" 
-                                        onclick="return confirm('確定要取消此預約嗎？ / Are you sure you want to cancel this appointment?')">
-                                    取消 / Cancel
-                                </button>
-                            </form>
                             <a href="${pageContext.request.contextPath}/patient/reschedule.do?appointmentId=<%= ab.getAppointmentId() %>">
-                                <button class="reschedule-btn">改期 / Reschedule</button>
+                                 <button>改期 / Reschedule</button>
                             </a>
                         <% } else { %>
-                            -
+                               -
                         <% } %>
                     </td>
                 </tr>
